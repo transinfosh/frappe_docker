@@ -2,6 +2,14 @@
   "name": "Frappe Bench",
   "forwardPorts": [8000, 9000, 6787],
   "remoteUser": "frappe",
+  
+  // 1. Install SSH and Codex CLI
+  "onCreateCommand": "sudo apt-get update && sudo apt-get install -y openssh-server && curl -fsSL https://developers.openai.com/codex/install.sh | sh",    
+  // 2. Configure public key, permission and ssh config
+  "updateContentCommand": "mkdir -p ~/.ssh && chmod 700 ~/.ssh && echo 'YOUR_SSH_PUBLIC_KEY_HERE' > ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config",    
+  // 3. Set SSH serice auto start
+  "postStartCommand": "sudo service ssh start",
+  
   "customizations": {
     "vscode": {
       "extensions": [

@@ -79,3 +79,19 @@ class DOC0030(Document):
 		).insert(ignore_permissions=True)
 		frappe.db.set_value("DOC0030", self.name, "latest_revision", revision.name, update_modified=False)
 		self.latest_revision = revision.name
+
+
+@frappe.whitelist()
+def restore_revision(page: str, revision: str):
+	page_doc = frappe.get_doc("DOC0030", page)
+	revision_doc = frappe.get_doc("DOC0031", revision)
+	if revision_doc.page != page_doc.name:
+		frappe.throw(_("修订记录不属于当前页面。"))
+
+	page_doc.title = revision_doc.title
+	page_doc.content_markdown = revision_doc.content_markdown
+	page_doc.summary = revision_doc.summary
+	page_doc.flags.skip_revision = True
+	page_doc.save()
+	page_doc.create_revision("restore")
+	return page_doc

@@ -1,4 +1,4 @@
-/* ../../../../../tmp/tmp-95523-qxN4vra4sbbW/doc/doc/public/css/docs_admin.bundle.css */
+/* ../../../../../tmp/tmp-1133-KcSAh21DmYyW/doc/doc/public/css/docs_admin.bundle.css */
 .page-container[data-page-route=docs-admin] .page-body,
 .page-container[data-page-route=docs-admin] .layout-main,
 .page-container[data-page-route=docs-admin] .layout-main-section-wrapper,
@@ -20,7 +20,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: 8px;
+  margin-right: 8px;
 }
 .page-actions .docs-admin-page-controls .frappe-control {
   flex: 0 0 180px;
@@ -42,7 +42,7 @@
 }
 .docs-admin__tree {
   overflow: auto;
-  border-left: 1px solid #dde2e8;
+  border-right: 1px solid #dde2e8;
   background: #fff;
   padding: 12px;
 }
@@ -52,7 +52,7 @@
   padding: 0;
 }
 .docs-admin__tree-node ul {
-  margin-right: 14px;
+  margin-left: 14px;
 }
 .docs-admin__tree-button {
   width: 100%;
@@ -62,7 +62,7 @@
   background: transparent;
   color: #344054;
   padding: 6px 8px;
-  text-align: right;
+  text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -94,14 +94,13 @@
 }
 .docs-admin__milkdown {
   overflow: auto;
-  padding: 24px;
   cursor: text;
 }
 .docs-admin__milkdown .ProseMirror {
-  min-height: 100%;
+  min-height: calc(100% - 48px);
   max-width: 1040px;
   margin: 0 auto;
-  padding: 0;
+  padding: 24px 0;
   outline: none;
   white-space: pre-wrap;
   word-break: break-word;
@@ -146,11 +145,11 @@
   }
   .docs-admin__tree {
     max-height: 260px;
-    border-left: 0;
+    border-right: 0;
     border-bottom: 1px solid #dde2e8;
   }
   .docs-admin-page-controls {
     display: none;
   }
 }
-/*# sourceMappingURL=docs_admin.bundle.QI7AE6EZ.css.map */
+/*# sourceMappingURL=docs_admin.bundle.H5BEBJZL.css.map */

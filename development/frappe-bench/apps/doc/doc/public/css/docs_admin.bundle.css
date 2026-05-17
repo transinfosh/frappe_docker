@@ -107,15 +107,14 @@
 
 .docs-admin__milkdown {
 	overflow: auto;
-	padding: 24px;
 	cursor: text;
 }
 
 .docs-admin__milkdown .ProseMirror {
-	min-height: 100%;
+	min-height: calc(100% - 48px);
 	max-width: 1040px;
 	margin: 0 auto;
-	padding: 0;
+	padding: 24px 0;
 	outline: none;
 	white-space: pre-wrap;
 	word-break: break-word;

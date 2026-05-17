@@ -1,8 +1,8 @@
-# Docs Platform Foundation Implementation Plan
+# Doc Platform Foundation Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 创建独立 `docs` Frappe 应用，并完成企业文档平台第一可交付切片：三文档先行、核心 DocType、项目级权限、文档版本、页面修订和基础后端测试。
+**Goal:** 创建独立 `doc` Frappe 应用，并完成企业文档平台第一可交付切片：三文档先行、核心 DocType、项目级权限、文档版本、页面修订和基础后端测试。
 
 **Architecture:** 第一阶段只实现平台内核，不实现 Vue 编辑端和外部阅读端。Frappe DocType 承载 `DOC0010` 到 `DOC0031` 的项目、成员、版本、页面和修订模型；后端 Python 负责 slug/path、版本复制、修订记录和项目级权限兜底；测试先覆盖模型规则和可发布前置能力。
 
@@ -14,7 +14,7 @@
 
 本计划只覆盖设计文档中的“平台骨架”切片：
 
-- 创建 `docs` app。
+- 创建 `doc` app。
 - 完成三文档先行：业务规格说明、BDD 场景、测试说明。
 - 建立核心 DocType：`DOC0010`、`DOC0011`、`DOC0020`、`DOC0030`、`DOC0031`。
 - 实现项目、版本、页面、页面修订的基础后端规则。
@@ -34,50 +34,50 @@
 
 ## File Structure
 
-`docs` 作为 app 名会生成 Python 包 `frappe-bench/apps/docs/docs`。由于应用根目录下的常规 `docs/` 文档目录会与包目录同名冲突，本计划将三文档先行产物放在应用根目录的 `design_docs/docs/` 下。代码仍使用 Frappe 标准包路径。
+`doc` 作为 app 名会生成 Python 包 `frappe-bench/apps/doc/doc`。由于 Python 包名为 `doc`，应用根目录下可以直接使用 `docs/` 作为文档目录；本计划将三文档先行产物放在 `docs/doc/` 下。代码仍使用 Frappe 标准包路径。
 
-- Create: `frappe-bench/apps/docs/`
-  - 独立 Frappe 应用根目录，由 `bench new-app docs --no-git` 生成。
-- Modify: `frappe-bench/apps/docs/docs/hooks.py`
+- Create: `frappe-bench/apps/doc/`
+  - 独立 Frappe 应用根目录，由 `bench new-app doc --no-git` 生成。
+- Modify: `frappe-bench/apps/doc/doc/hooks.py`
   - 设置应用中文标题、app home 和基础配置。
-- Modify: `frappe-bench/apps/docs/docs/modules.txt`
-  - 确认模块名为 `Docs`。
-- Create: `frappe-bench/apps/docs/design_docs/docs/DOC0000-文档平台骨架-业务规格说明.md`
+- Modify: `frappe-bench/apps/doc/doc/modules.txt`
+  - 确认模块名为 `Doc`。
+- Create: `frappe-bench/apps/doc/docs/doc/DOC0000-文档平台骨架-业务规格说明.md`
   - 第一切片业务规格说明。
-- Create: `frappe-bench/apps/docs/design_docs/docs/DOC0000-文档平台骨架-BDD场景.md`
+- Create: `frappe-bench/apps/doc/docs/doc/DOC0000-文档平台骨架-BDD场景.md`
   - 第一切片 BDD 场景。
-- Create: `frappe-bench/apps/docs/design_docs/docs/DOC0000-文档平台骨架-测试说明.md`
+- Create: `frappe-bench/apps/doc/docs/doc/DOC0000-文档平台骨架-测试说明.md`
   - 第一切片测试说明。
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0010/`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0010/`
   - `DOC0010 文档项目` DocType JSON、Python、测试。
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0011/`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0011/`
   - `DOC0011 文档项目成员` 子表 DocType JSON、Python。
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0020/`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0020/`
   - `DOC0020 文档版本` DocType JSON、Python、测试。
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0030/`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0030/`
   - `DOC0030 文档页面` DocType JSON、Python、测试。
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0031/`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0031/`
   - `DOC0031 文档页面修订` DocType JSON、Python。
-- Create: `frappe-bench/apps/docs/docs/docs/services/permissions.py`
+- Create: `frappe-bench/apps/doc/doc/doc/services/permissions.py`
   - 项目级角色判断和权限兜底函数。
-- Create: `frappe-bench/apps/docs/docs/docs/services/slug.py`
+- Create: `frappe-bench/apps/doc/doc/doc/services/slug.py`
   - slug/path 规范化与生成辅助函数。
-- Create: `frappe-bench/apps/docs/docs/docs/services/versioning.py`
+- Create: `frappe-bench/apps/doc/doc/doc/services/versioning.py`
   - 文档版本复制服务。
 
-## Task 1: 创建 `docs` App 骨架
+## Task 1: 创建 `doc` App 骨架
 
 **Files:**
-- Create: `frappe-bench/apps/docs/`
-- Modify: `frappe-bench/apps/docs/docs/hooks.py`
-- Modify: `frappe-bench/apps/docs/docs/modules.txt`
+- Create: `frappe-bench/apps/doc/`
+- Modify: `frappe-bench/apps/doc/doc/hooks.py`
+- Modify: `frappe-bench/apps/doc/doc/modules.txt`
 
 - [ ] **Step 1: 运行 app 创建命令**
 
 Run from `/workspace/development/frappe-bench`:
 
 ```bash
-bench new-app docs --no-git
+bench new-app doc --no-git
 ```
 
 When prompted, enter:
@@ -93,23 +93,23 @@ App License: mit
 Expected:
 
 ```text
-App docs created
+App doc created
 ```
 
 - [ ] **Step 2: 确认模块文件**
 
-Open `frappe-bench/apps/docs/docs/modules.txt` and ensure it contains exactly:
+Open `frappe-bench/apps/doc/doc/modules.txt` and ensure it contains exactly:
 
 ```text
-Docs
+Doc
 ```
 
 - [ ] **Step 3: 调整 hooks 基础信息**
 
-Modify `frappe-bench/apps/docs/docs/hooks.py` so the top app metadata is:
+Modify `frappe-bench/apps/doc/doc/hooks.py` so the top app metadata is:
 
 ```python
-app_name = "docs"
+app_name = "doc"
 app_title = "文档"
 app_publisher = "Transinfo"
 app_description = "Enterprise documentation platform"
@@ -135,26 +135,26 @@ Expected: command may fail if `test.localhost` does not exist. If it fails with 
 
 ```bash
 cd /workspace/development
-git add -f frappe-bench/apps/docs
-git commit -m "feat: create docs app skeleton"
+git add -f frappe-bench/apps/doc
+git commit -m "feat: create doc app skeleton"
 ```
 
 ## Task 2: 补齐三文档先行
 
 **Files:**
-- Create: `frappe-bench/apps/docs/design_docs/docs/DOC0000-文档平台骨架-业务规格说明.md`
-- Create: `frappe-bench/apps/docs/design_docs/docs/DOC0000-文档平台骨架-BDD场景.md`
-- Create: `frappe-bench/apps/docs/design_docs/docs/DOC0000-文档平台骨架-测试说明.md`
+- Create: `frappe-bench/apps/doc/docs/doc/DOC0000-文档平台骨架-业务规格说明.md`
+- Create: `frappe-bench/apps/doc/docs/doc/DOC0000-文档平台骨架-BDD场景.md`
+- Create: `frappe-bench/apps/doc/docs/doc/DOC0000-文档平台骨架-测试说明.md`
 
 - [ ] **Step 1: 创建文档目录**
 
 ```bash
-mkdir -p /workspace/development/frappe-bench/apps/docs/design_docs/docs
+mkdir -p /workspace/development/frappe-bench/apps/doc/docs/doc
 ```
 
 - [ ] **Step 2: 创建业务规格说明**
 
-Create `frappe-bench/apps/docs/design_docs/docs/DOC0000-文档平台骨架-业务规格说明.md` with this content:
+Create `frappe-bench/apps/doc/docs/doc/DOC0000-文档平台骨架-业务规格说明.md` with this content:
 
 ```markdown
 # DOC0000 文档平台骨架业务规格说明
@@ -276,14 +276,14 @@ Create `frappe-bench/apps/docs/design_docs/docs/DOC0000-文档平台骨架-业�
 
 ## 6. 风险与假设
 
-- 应用名 `docs` 与常规文档目录名冲突，因此业务文档放在 `design_docs/docs/` 下。
+- 应用名 `doc` 不再与应用根目录的 `docs/` 文档目录冲突，业务三文档可放在应用根目录的 `docs/doc/` 下。
 - 第一阶段角色判断通过服务函数完成，Frappe 权限矩阵只提供基础保护。
 - 页面移动后需要递归更新后代 path；第一阶段可以先实现保存当前页面和直接后代更新，复杂批量移动留给编辑端计划细化。
 ```
 
 - [ ] **Step 3: 创建 BDD 场景**
 
-Create `frappe-bench/apps/docs/design_docs/docs/DOC0000-文档平台骨架-BDD场景.md` with this content:
+Create `frappe-bench/apps/doc/docs/doc/DOC0000-文档平台骨架-BDD场景.md` with this content:
 
 ```markdown
 # DOC0000 文档平台骨架 BDD 场景
@@ -380,7 +380,7 @@ And 系统应创建一条 change_type 为 restore 的新修订
 
 - [ ] **Step 4: 创建测试说明**
 
-Create `frappe-bench/apps/docs/design_docs/docs/DOC0000-文档平台骨架-测试说明.md` with this content:
+Create `frappe-bench/apps/doc/docs/doc/DOC0000-文档平台骨架-测试说明.md` with this content:
 
 ```markdown
 # DOC0000 文档平台骨架测试说明
@@ -392,7 +392,7 @@ Create `frappe-bench/apps/docs/design_docs/docs/DOC0000-文档平台骨架-测�
 ## 2. 前置数据
 
 - Frappe 隔离测试站点：`test.localhost`。
-- 已安装 app：`docs`。
+- 已安装 app：`doc`。
 - 管理员账号：`Administrator` / `admin`。
 
 ## 3. 用例映射表
@@ -413,7 +413,7 @@ Create `frappe-bench/apps/docs/design_docs/docs/DOC0000-文档平台骨架-测�
 
 ```bash
 cd /workspace/development/frappe-bench
-bench --site test.localhost run-tests --app docs
+bench --site test.localhost run-tests --app doc
 ```
 
 ## 5. 手工验证
@@ -422,32 +422,32 @@ bench --site test.localhost run-tests --app docs
 
 ## 6. 回归范围
 
-`docs` 是新 app，不应修改 `base`、`srm`、`quality` 等已有 app。
+`doc` 是新 app，不应修改 `base`、`srm`、`quality` 等已有 app。
 ```
 
 - [ ] **Step 5: Commit**
 
 ```bash
 cd /workspace/development
-git add -f frappe-bench/apps/docs/design_docs/docs
-git commit -m "docs: add platform foundation specs"
+git add -f frappe-bench/apps/doc/docs/doc
+git commit -m "doc: add platform foundation specs"
 ```
 
 ## Task 3: 添加基础服务函数测试
 
 **Files:**
-- Create: `frappe-bench/apps/docs/docs/docs/services/__init__.py`
-- Create: `frappe-bench/apps/docs/docs/docs/services/slug.py`
-- Create: `frappe-bench/apps/docs/docs/docs/tests/test_slug.py`
+- Create: `frappe-bench/apps/doc/doc/doc/services/__init__.py`
+- Create: `frappe-bench/apps/doc/doc/doc/services/slug.py`
+- Create: `frappe-bench/apps/doc/doc/doc/tests/test_slug.py`
 
 - [ ] **Step 1: 写 slug 服务失败测试**
 
-Create `frappe-bench/apps/docs/docs/docs/tests/test_slug.py`:
+Create `frappe-bench/apps/doc/doc/doc/tests/test_slug.py`:
 
 ```python
 import unittest
 
-from docs.docs.services.slug import normalize_slug, validate_slug
+from doc.doc.services.slug import normalize_slug, validate_slug
 
 
 class TestSlugService(unittest.TestCase):
@@ -468,16 +468,16 @@ Run:
 
 ```bash
 cd /workspace/development/frappe-bench
-python -m unittest docs.docs.tests.test_slug -v
+python -m unittest doc.doc.tests.test_slug -v
 ```
 
 Expected: FAIL with `ModuleNotFoundError` or missing function.
 
 - [ ] **Step 3: 实现 slug 服务**
 
-Create `frappe-bench/apps/docs/docs/docs/services/__init__.py` as an empty file.
+Create `frappe-bench/apps/doc/doc/doc/services/__init__.py` as an empty file.
 
-Create `frappe-bench/apps/docs/docs/docs/services/slug.py`:
+Create `frappe-bench/apps/doc/doc/doc/services/slug.py`:
 
 ```python
 import re
@@ -507,7 +507,7 @@ Run:
 
 ```bash
 cd /workspace/development/frappe-bench
-python -m unittest docs.docs.tests.test_slug -v
+python -m unittest doc.doc.tests.test_slug -v
 ```
 
 Expected: PASS.
@@ -516,22 +516,22 @@ Expected: PASS.
 
 ```bash
 cd /workspace/development
-git add -f frappe-bench/apps/docs/docs/docs/services frappe-bench/apps/docs/docs/docs/tests/test_slug.py
-git commit -m "test: add docs slug service"
+git add -f frappe-bench/apps/doc/doc/doc/services frappe-bench/apps/doc/doc/doc/tests/test_slug.py
+git commit -m "test: add doc slug service"
 ```
 
 ## Task 4: 创建 DOC0010 和 DOC0011
 
 **Files:**
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0010/doc0010.json`
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0010/doc0010.py`
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0010/test_doc0010.py`
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0011/doc0011.json`
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0011/doc0011.py`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0010/doc0010.json`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0010/doc0010.py`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0010/test_doc0010.py`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0011/doc0011.json`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0011/doc0011.py`
 
 - [ ] **Step 1: 写 DOC0010 后端测试**
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0010/test_doc0010.py`:
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0010/test_doc0010.py`:
 
 ```python
 import frappe
@@ -580,9 +580,9 @@ class TestDOC0010(IntegrationTestCase):
 
 - [ ] **Step 2: 创建 DOC0011 子表元数据和类**
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0011/__init__.py` as an empty file.
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0011/__init__.py` as an empty file.
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0011/doc0011.py`:
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0011/doc0011.py`:
 
 ```python
 from frappe.model.document import Document
@@ -592,7 +592,7 @@ class DOC0011(Document):
 	pass
 ```
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0011/doc0011.json`:
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0011/doc0011.json`:
 
 ```json
 {
@@ -607,7 +607,7 @@ Create `frappe-bench/apps/docs/docs/docs/doctype/doc0011/doc0011.json`:
   {"fieldname": "role", "fieldtype": "Select", "label": "角色", "options": "viewer\neditor\npublisher\nmanager", "reqd": 1}
  ],
  "istable": 1,
- "module": "Docs",
+ "module": "Doc",
  "name": "DOC0011",
  "owner": "Administrator",
  "permissions": [],
@@ -620,16 +620,16 @@ Create `frappe-bench/apps/docs/docs/docs/doctype/doc0011/doc0011.json`:
 
 - [ ] **Step 3: 创建 DOC0010 元数据和类**
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0010/__init__.py` as an empty file.
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0010/__init__.py` as an empty file.
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0010/doc0010.py`:
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0010/doc0010.py`:
 
 ```python
 import frappe
 from frappe import _
 from frappe.model.document import Document
 
-from docs.docs.services.slug import normalize_slug, validate_slug
+from doc.doc.services.slug import normalize_slug, validate_slug
 
 
 class DOC0010(Document):
@@ -653,7 +653,7 @@ class DOC0010(Document):
 			users.add(row.user)
 ```
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0010/doc0010.json`:
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0010/doc0010.json`:
 
 ```json
 {
@@ -673,7 +673,7 @@ Create `frappe-bench/apps/docs/docs/docs/doctype/doc0010/doc0010.json`:
   {"default": "active", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "状态", "options": "active\narchived", "reqd": 1},
   {"fieldname": "members", "fieldtype": "Table", "label": "项目成员", "options": "DOC0011"}
  ],
- "module": "Docs",
+ "module": "Doc",
  "name": "DOC0010",
  "naming_rule": "By fieldname",
  "owner": "Administrator",
@@ -693,7 +693,7 @@ Run:
 
 ```bash
 cd /workspace/development/frappe-bench
-bench --site test.localhost run-tests --app docs --module docs.docs.doctype.doc0010.test_doc0010
+bench --site test.localhost run-tests --app doc --module doc.doc.doctype.doc0010.test_doc0010
 ```
 
 Expected: PASS after the test site is created and app installed in Task 10. Before Task 10, this command may fail because the site or DocType table does not exist.
@@ -702,20 +702,20 @@ Expected: PASS after the test site is created and app installed in Task 10. Befo
 
 ```bash
 cd /workspace/development
-git add -f frappe-bench/apps/docs/docs/docs/doctype/doc0010 frappe-bench/apps/docs/docs/docs/doctype/doc0011
-git commit -m "feat: add docs project doctypes"
+git add -f frappe-bench/apps/doc/doc/doc/doctype/doc0010 frappe-bench/apps/doc/doc/doc/doctype/doc0011
+git commit -m "feat: add doc project doctypes"
 ```
 
 ## Task 5: 创建 DOC0020 文档版本
 
 **Files:**
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0020/doc0020.json`
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0020/doc0020.py`
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0020/test_doc0020.py`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0020/doc0020.json`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0020/doc0020.py`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0020/test_doc0020.py`
 
 - [ ] **Step 1: 写 DOC0020 测试**
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0020/test_doc0020.py`:
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0020/test_doc0020.py`:
 
 ```python
 import frappe
@@ -761,14 +761,14 @@ class TestDOC0020(IntegrationTestCase):
 
 - [ ] **Step 2: 实现 DOC0020 类**
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0020/doc0020.py`:
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0020/doc0020.py`:
 
 ```python
 import frappe
 from frappe import _
 from frappe.model.document import Document
 
-from docs.docs.services.slug import normalize_slug, validate_slug
+from doc.doc.services.slug import normalize_slug, validate_slug
 
 
 class DOC0020(Document):
@@ -816,7 +816,7 @@ class DOC0020(Document):
 
 - [ ] **Step 3: 创建 DOC0020 JSON**
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0020/doc0020.json`:
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0020/doc0020.json`:
 
 ```json
 {
@@ -836,7 +836,7 @@ Create `frappe-bench/apps/docs/docs/docs/doctype/doc0020/doc0020.json`:
   {"fieldname": "source_version", "fieldtype": "Link", "label": "来源版本", "options": "DOC0020"},
   {"default": "blank", "fieldname": "creation_mode", "fieldtype": "Select", "label": "创建方式", "options": "blank\ncopy", "reqd": 1}
  ],
- "module": "Docs",
+ "module": "Doc",
  "name": "DOC0020",
  "naming_rule": "Expression",
  "owner": "Administrator",
@@ -856,7 +856,7 @@ Run:
 
 ```bash
 cd /workspace/development/frappe-bench
-bench --site test.localhost run-tests --app docs --module docs.docs.doctype.doc0020.test_doc0020
+bench --site test.localhost run-tests --app doc --module doc.doc.doctype.doc0020.test_doc0020
 ```
 
 Expected: PASS after Task 10.
@@ -865,22 +865,22 @@ Expected: PASS after Task 10.
 
 ```bash
 cd /workspace/development
-git add -f frappe-bench/apps/docs/docs/docs/doctype/doc0020
+git add -f frappe-bench/apps/doc/doc/doc/doctype/doc0020
 git commit -m "feat: add document version doctype"
 ```
 
 ## Task 6: 创建 DOC0030 和 DOC0031
 
 **Files:**
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0030/doc0030.json`
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0030/doc0030.py`
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0030/test_doc0030.py`
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0031/doc0031.json`
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0031/doc0031.py`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0030/doc0030.json`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0030/doc0030.py`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0030/test_doc0030.py`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0031/doc0031.json`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0031/doc0031.py`
 
 - [ ] **Step 1: 写 DOC0030 页面测试**
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0030/test_doc0030.py`:
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0030/test_doc0030.py`:
 
 ```python
 import frappe
@@ -964,7 +964,7 @@ class TestDOC0030(IntegrationTestCase):
 
 - [ ] **Step 2: 创建 DOC0031 类**
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0031/doc0031.py`:
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0031/doc0031.py`:
 
 ```python
 import frappe
@@ -979,7 +979,7 @@ class DOC0031(Document):
 
 - [ ] **Step 3: 创建 DOC0030 类**
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0030/doc0030.py`:
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0030/doc0030.py`:
 
 ```python
 import frappe
@@ -987,7 +987,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import now_datetime
 
-from docs.docs.services.slug import normalize_slug, validate_slug
+from doc.doc.services.slug import normalize_slug, validate_slug
 
 
 class DOC0030(Document):
@@ -1067,7 +1067,7 @@ class DOC0030(Document):
 
 - [ ] **Step 4: 创建 DOC0030 和 DOC0031 JSON**
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0030/doc0030.json`:
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0030/doc0030.json`:
 
 ```json
 {
@@ -1093,7 +1093,7 @@ Create `frappe-bench/apps/docs/docs/docs/doctype/doc0030/doc0030.json`:
   {"default": "draft", "fieldname": "review_status", "fieldtype": "Select", "label": "审核状态", "options": "draft\nreviewing\napproved\nrejected"},
   {"fieldname": "latest_revision", "fieldtype": "Link", "label": "最近修订", "options": "DOC0031", "read_only": 1}
  ],
- "module": "Docs",
+ "module": "Doc",
  "name": "DOC0030",
  "naming_rule": "Random",
  "owner": "Administrator",
@@ -1107,7 +1107,7 @@ Create `frappe-bench/apps/docs/docs/docs/doctype/doc0030/doc0030.json`:
 }
 ```
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0031/doc0031.json`:
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0031/doc0031.json`:
 
 ```json
 {
@@ -1130,7 +1130,7 @@ Create `frappe-bench/apps/docs/docs/docs/doctype/doc0031/doc0031.json`:
   {"fieldname": "created_by", "fieldtype": "Link", "label": "修改人", "options": "User", "read_only": 1},
   {"fieldname": "created_at", "fieldtype": "Datetime", "label": "修改时间", "read_only": 1}
  ],
- "module": "Docs",
+ "module": "Doc",
  "name": "DOC0031",
  "naming_rule": "Random",
  "owner": "Administrator",
@@ -1150,7 +1150,7 @@ Run:
 
 ```bash
 cd /workspace/development/frappe-bench
-bench --site test.localhost run-tests --app docs --module docs.docs.doctype.doc0030.test_doc0030
+bench --site test.localhost run-tests --app doc --module doc.doc.doctype.doc0030.test_doc0030
 ```
 
 Expected: PASS after Task 10.
@@ -1159,25 +1159,25 @@ Expected: PASS after Task 10.
 
 ```bash
 cd /workspace/development
-git add -f frappe-bench/apps/docs/docs/docs/doctype/doc0030 frappe-bench/apps/docs/docs/docs/doctype/doc0031
+git add -f frappe-bench/apps/doc/doc/doc/doctype/doc0030 frappe-bench/apps/doc/doc/doc/doctype/doc0031
 git commit -m "feat: add document page revisions"
 ```
 
 ## Task 7: 添加项目权限服务
 
 **Files:**
-- Create: `frappe-bench/apps/docs/docs/docs/services/permissions.py`
-- Create: `frappe-bench/apps/docs/docs/docs/tests/test_permissions.py`
+- Create: `frappe-bench/apps/doc/doc/doc/services/permissions.py`
+- Create: `frappe-bench/apps/doc/doc/doc/tests/test_permissions.py`
 
 - [ ] **Step 1: 写权限服务测试**
 
-Create `frappe-bench/apps/docs/docs/docs/tests/test_permissions.py`:
+Create `frappe-bench/apps/doc/doc/doc/tests/test_permissions.py`:
 
 ```python
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from docs.docs.services.permissions import get_project_role, has_project_role
+from doc.doc.services.permissions import get_project_role, has_project_role
 
 
 class TestProjectPermissions(IntegrationTestCase):
@@ -1204,7 +1204,7 @@ class TestProjectPermissions(IntegrationTestCase):
 
 - [ ] **Step 2: 实现权限服务**
 
-Create `frappe-bench/apps/docs/docs/docs/services/permissions.py`:
+Create `frappe-bench/apps/doc/doc/doc/services/permissions.py`:
 
 ```python
 import frappe
@@ -1243,7 +1243,7 @@ Run:
 
 ```bash
 cd /workspace/development/frappe-bench
-bench --site test.localhost run-tests --app docs --module docs.docs.tests.test_permissions
+bench --site test.localhost run-tests --app doc --module doc.doc.tests.test_permissions
 ```
 
 Expected: PASS after Task 10.
@@ -1252,25 +1252,25 @@ Expected: PASS after Task 10.
 
 ```bash
 cd /workspace/development
-git add -f frappe-bench/apps/docs/docs/docs/services/permissions.py frappe-bench/apps/docs/docs/docs/tests/test_permissions.py
-git commit -m "feat: add docs project permission service"
+git add -f frappe-bench/apps/doc/doc/doc/services/permissions.py frappe-bench/apps/doc/doc/doc/tests/test_permissions.py
+git commit -m "feat: add doc project permission service"
 ```
 
 ## Task 8: 添加版本复制服务
 
 **Files:**
-- Create: `frappe-bench/apps/docs/docs/docs/services/versioning.py`
-- Create: `frappe-bench/apps/docs/docs/docs/tests/test_versioning.py`
+- Create: `frappe-bench/apps/doc/doc/doc/services/versioning.py`
+- Create: `frappe-bench/apps/doc/doc/doc/tests/test_versioning.py`
 
 - [ ] **Step 1: 写版本复制测试**
 
-Create `frappe-bench/apps/docs/docs/docs/tests/test_versioning.py`:
+Create `frappe-bench/apps/doc/doc/doc/tests/test_versioning.py`:
 
 ```python
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from docs.docs.services.versioning import copy_version_tree
+from doc.doc.services.versioning import copy_version_tree
 
 
 class TestVersioningService(IntegrationTestCase):
@@ -1304,7 +1304,7 @@ class TestVersioningService(IntegrationTestCase):
 
 - [ ] **Step 2: 实现版本复制服务**
 
-Create `frappe-bench/apps/docs/docs/docs/services/versioning.py`:
+Create `frappe-bench/apps/doc/doc/doc/services/versioning.py`:
 
 ```python
 import frappe
@@ -1343,7 +1343,7 @@ Run:
 
 ```bash
 cd /workspace/development/frappe-bench
-bench --site test.localhost run-tests --app docs --module docs.docs.tests.test_versioning
+bench --site test.localhost run-tests --app doc --module doc.doc.tests.test_versioning
 ```
 
 Expected: PASS after Task 10.
@@ -1352,25 +1352,25 @@ Expected: PASS after Task 10.
 
 ```bash
 cd /workspace/development
-git add -f frappe-bench/apps/docs/docs/docs/services/versioning.py frappe-bench/apps/docs/docs/docs/tests/test_versioning.py
-git commit -m "feat: add docs version copy service"
+git add -f frappe-bench/apps/doc/doc/doc/services/versioning.py frappe-bench/apps/doc/doc/doc/tests/test_versioning.py
+git commit -m "feat: add doc version copy service"
 ```
 
 ## Task 9: 添加恢复修订接口
 
 **Files:**
-- Modify: `frappe-bench/apps/docs/docs/docs/doctype/doc0030/doc0030.py`
-- Create: `frappe-bench/apps/docs/docs/docs/doctype/doc0030/test_doc0030_restore.py`
+- Modify: `frappe-bench/apps/doc/doc/doc/doctype/doc0030/doc0030.py`
+- Create: `frappe-bench/apps/doc/doc/doc/doctype/doc0030/test_doc0030_restore.py`
 
 - [ ] **Step 1: 写恢复修订测试**
 
-Create `frappe-bench/apps/docs/docs/docs/doctype/doc0030/test_doc0030_restore.py`:
+Create `frappe-bench/apps/doc/doc/doc/doctype/doc0030/test_doc0030_restore.py`:
 
 ```python
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from docs.docs.doctype.doc0030.doc0030 import restore_revision
+from doc.doc.doctype.doc0030.doc0030 import restore_revision
 
 
 class TestDOC0030Restore(IntegrationTestCase):
@@ -1405,7 +1405,7 @@ class TestDOC0030Restore(IntegrationTestCase):
 
 - [ ] **Step 2: 实现恢复接口**
 
-Append to `frappe-bench/apps/docs/docs/docs/doctype/doc0030/doc0030.py`:
+Append to `frappe-bench/apps/doc/doc/doc/doctype/doc0030/doc0030.py`:
 
 ```python
 @frappe.whitelist()
@@ -1430,7 +1430,7 @@ Run:
 
 ```bash
 cd /workspace/development/frappe-bench
-bench --site test.localhost run-tests --app docs --module docs.docs.doctype.doc0030.test_doc0030_restore
+bench --site test.localhost run-tests --app doc --module doc.doc.doctype.doc0030.test_doc0030_restore
 ```
 
 Expected: PASS after Task 10.
@@ -1439,7 +1439,7 @@ Expected: PASS after Task 10.
 
 ```bash
 cd /workspace/development
-git add -f frappe-bench/apps/docs/docs/docs/doctype/doc0030
+git add -f frappe-bench/apps/doc/doc/doc/doctype/doc0030
 git commit -m "feat: add document revision restore"
 ```
 
@@ -1459,13 +1459,13 @@ bench new-site test.localhost --db-root-password 123 --admin-password admin
 
 Expected: site is created. If the site already exists and is disposable, skip creation and use the existing `test.localhost`.
 
-- [ ] **Step 2: 安装 docs app**
+- [ ] **Step 2: 安装 doc app**
 
 Run:
 
 ```bash
 cd /workspace/development/frappe-bench
-bench --site test.localhost install-app docs
+bench --site test.localhost install-app doc
 ```
 
 Expected: app installs and DocType tables are created.
@@ -1476,7 +1476,7 @@ Run:
 
 ```bash
 cd /workspace/development/frappe-bench
-bench --site test.localhost run-tests --app docs
+bench --site test.localhost run-tests --app doc
 ```
 
 Expected: PASS.
@@ -1487,11 +1487,11 @@ Run only after the isolated test site passes:
 
 ```bash
 cd /workspace/development/frappe-bench
-bench --site development.localhost install-app docs
+bench --site development.localhost install-app doc
 bench --site development.localhost migrate
 ```
 
-Expected: development site installs or migrates successfully. If `docs` is already installed, `install-app` may report that the app is already installed; then run `migrate`.
+Expected: development site installs or migrates successfully. If `doc` is already installed, `install-app` may report that the app is already installed; then run `migrate`.
 
 - [ ] **Step 5: Commit verification adjustments**
 
@@ -1499,8 +1499,8 @@ If tests required code fixes, commit them:
 
 ```bash
 cd /workspace/development
-git add -f frappe-bench/apps/docs
-git commit -m "test: verify docs platform foundation"
+git add -f frappe-bench/apps/doc
+git commit -m "test: verify doc platform foundation"
 ```
 
 If no files changed, do not create an empty commit.

@@ -87,3 +87,32 @@ class TestAdminAPI(UnitTestCase):
 
 		self.assertEqual(detail["content_markdown"], "# 已更新")
 		self.assertEqual(frappe.db.get_value("DOC0030", child.name, "content_markdown"), "# 已更新")
+
+	def test_save_page_content_preserves_mermaid_arrows(self):
+		_project, _version, _root, child = self.create_docs()
+		markdown = """业务流程图：
+
+```mermaid
+flowchart TD
+    A["维护主数据"] --&gt; B["创建报检单"]
+```
+"""
+
+		detail = save_page_content(child.name, markdown)
+
+		self.assertIn('A["维护主数据"] --> B["创建报检单"]', detail["content_markdown"])
+		self.assertNotIn("--&gt;", detail["content_markdown"])
+
+	def test_save_page_content_restores_indented_mermaid_block(self):
+		_project, _version, _root, child = self.create_docs()
+		markdown = """业务流程图：
+
+    flowchart TD
+        A --&gt; B
+
+后续内容"""
+
+		detail = save_page_content(child.name, markdown)
+
+		self.assertIn("```mermaid\nflowchart TD\n    A --> B\n```", detail["content_markdown"])
+		self.assertIn("后续内容", detail["content_markdown"])

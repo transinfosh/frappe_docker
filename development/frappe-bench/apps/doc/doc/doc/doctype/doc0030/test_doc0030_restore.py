@@ -1,10 +1,10 @@
 import frappe
-from frappe.tests import IntegrationTestCase
+from frappe.tests import UnitTestCase
 
 from doc.doc.doctype.doc0030.doc0030 import restore_revision
 
 
-class TestDOC0030Restore(IntegrationTestCase):
+class TestDOC0030Restore(UnitTestCase):
 	def tearDown(self):
 		frappe.db.rollback()
 

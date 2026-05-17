@@ -1,29 +1,5 @@
 <template>
 	<div class="docs-admin">
-		<header class="docs-admin__toolbar">
-			<div class="docs-admin__selectors">
-				<label>
-					<span>项目</span>
-					<select v-model="selectedProject" @change="onProjectChange">
-						<option v-for="project in projects" :key="project.name" :value="project.name">
-							{{ project.title }}
-						</option>
-					</select>
-				</label>
-				<label>
-					<span>版本</span>
-					<select v-model="selectedVersion" @change="loadTree">
-						<option v-for="version in versions" :key="version.name" :value="version.name">
-							{{ version.title || version.version_key }}
-						</option>
-					</select>
-				</label>
-			</div>
-			<button class="btn btn-primary btn-sm" :disabled="!currentPage || saving" @click="savePage">
-				{{ saving ? "保存中" : "保存" }}
-			</button>
-		</header>
-
 		<div class="docs-admin__body">
 			<aside class="docs-admin__tree">
 				<div v-if="loading" class="docs-admin__empty">加载中</div>
@@ -71,6 +47,10 @@ import { listener, listenerCtx } from "@milkdown/plugin-listener";
 import { commonmark } from "@milkdown/preset-commonmark";
 import { getMarkdown } from "@milkdown/utils";
 import { computed, defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
+
+const props = defineProps({
+	pageControls: { type: Object, default: () => ({}) },
+});
 
 const projects = ref([]);
 const versions = ref([]);
@@ -134,6 +114,12 @@ onBeforeUnmount(() => {
 	destroyMilkdown();
 });
 
+defineExpose({
+	savePage,
+	setProject,
+	setVersion,
+});
+
 async function call(method, args = {}) {
 	const result = await frappe.call({ method, args });
 	return result.message || [];
@@ -144,6 +130,11 @@ async function loadProjects() {
 	try {
 		projects.value = await call("doc.doc.api.admin.get_project_spaces");
 		selectedProject.value = projects.value[0]?.name || "";
+		setSelectOptions(
+			props.pageControls.project,
+			projects.value.map((project) => ({ value: project.name, label: project.title })),
+			selectedProject.value
+		);
 		await onProjectChange();
 	} finally {
 		loading.value = false;
@@ -159,6 +150,28 @@ async function onProjectChange() {
 		: [];
 	selectedVersion.value =
 		versions.value.find((version) => version.is_default)?.name || versions.value[0]?.name || "";
+	setSelectOptions(
+		props.pageControls.version,
+		versions.value.map((version) => ({
+			value: version.name,
+			label: version.title || version.version_key,
+		})),
+		selectedVersion.value
+	);
+	await loadTree();
+}
+
+async function setProject(project) {
+	if (!project || project === selectedProject.value) return;
+
+	selectedProject.value = project;
+	await onProjectChange();
+}
+
+async function setVersion(version) {
+	if (!version || version === selectedVersion.value) return;
+
+	selectedVersion.value = version;
 	await loadTree();
 }
 
@@ -186,7 +199,10 @@ async function selectPage(pageName) {
 }
 
 async function savePage() {
-	if (!currentPage.value) return;
+	if (!currentPage.value) {
+		frappe.show_alert({ message: __("请选择文档页面"), indicator: "orange" });
+		return;
+	}
 
 	saving.value = true;
 	try {
@@ -210,6 +226,14 @@ function findFirstPage(nodes) {
 		return node;
 	}
 	return null;
+}
+
+function setSelectOptions(field, options, value) {
+	if (!field) return;
+
+	field.df.options = options.map((option) => ({ value: option.value, label: option.label }));
+	field.set_options(value);
+	field.set_value(value);
 }
 
 async function mountMilkdown() {

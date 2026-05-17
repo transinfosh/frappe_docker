@@ -192,7 +192,6 @@
   var isArray = Array.isArray;
   var isMap = (val) => toTypeString(val) === "[object Map]";
   var isSet = (val) => toTypeString(val) === "[object Set]";
-  var isDate = (val) => toTypeString(val) === "[object Date]";
   var isFunction = (val) => typeof val === "function";
   var isString = (val) => typeof val === "string";
   var isSymbol = (val) => typeof val === "symbol";
@@ -321,57 +320,6 @@
   );
   function includeBooleanAttr(value) {
     return !!value || value === "";
-  }
-  function looseCompareArrays(a, b) {
-    if (a.length !== b.length)
-      return false;
-    let equal = true;
-    for (let i = 0; equal && i < a.length; i++) {
-      equal = looseEqual(a[i], b[i]);
-    }
-    return equal;
-  }
-  function looseEqual(a, b) {
-    if (a === b)
-      return true;
-    let aValidType = isDate(a);
-    let bValidType = isDate(b);
-    if (aValidType || bValidType) {
-      return aValidType && bValidType ? a.getTime() === b.getTime() : false;
-    }
-    aValidType = isSymbol(a);
-    bValidType = isSymbol(b);
-    if (aValidType || bValidType) {
-      return a === b;
-    }
-    aValidType = isArray(a);
-    bValidType = isArray(b);
-    if (aValidType || bValidType) {
-      return aValidType && bValidType ? looseCompareArrays(a, b) : false;
-    }
-    aValidType = isObject(a);
-    bValidType = isObject(b);
-    if (aValidType || bValidType) {
-      if (!aValidType || !bValidType) {
-        return false;
-      }
-      const aKeysCount = Object.keys(a).length;
-      const bKeysCount = Object.keys(b).length;
-      if (aKeysCount !== bKeysCount) {
-        return false;
-      }
-      for (const key3 in a) {
-        const aHasKey = a.hasOwnProperty(key3);
-        const bHasKey = b.hasOwnProperty(key3);
-        if (aHasKey && !bHasKey || !aHasKey && bHasKey || !looseEqual(a[key3], b[key3])) {
-          return false;
-        }
-      }
-    }
-    return String(a) === String(b);
-  }
-  function looseIndexOf(arr, val) {
-    return arr.findIndex((item) => looseEqual(item, val));
   }
   var toDisplayString = (val) => {
     return isString(val) ? val : val == null ? "" : isArray(val) || isObject(val) && (val.toString === objectToString || !isFunction(val.toString)) ? JSON.stringify(val, replacer, 2) : String(val);
@@ -7844,62 +7792,6 @@ Component that was made reactive: `,
       el.value = newValue;
     }
   };
-  var vModelSelect = {
-    deep: true,
-    created(el, { value, modifiers: { number } }, vnode) {
-      const isSetModel = isSet(value);
-      addEventListener2(el, "change", () => {
-        const selectedVal = Array.prototype.filter.call(el.options, (o) => o.selected).map(
-          (o) => number ? looseToNumber(getValue(o)) : getValue(o)
-        );
-        el[assignKey](
-          el.multiple ? isSetModel ? new Set(selectedVal) : selectedVal : selectedVal[0]
-        );
-      });
-      el[assignKey] = getModelAssigner(vnode);
-    },
-    mounted(el, { value }) {
-      setSelected(el, value);
-    },
-    beforeUpdate(el, _binding, vnode) {
-      el[assignKey] = getModelAssigner(vnode);
-    },
-    updated(el, { value }) {
-      setSelected(el, value);
-    }
-  };
-  function setSelected(el, value) {
-    const isMultiple = el.multiple;
-    if (isMultiple && !isArray(value) && !isSet(value)) {
-      warn2(
-        `<select multiple v-model> expects an Array or Set value for its binding, but got ${Object.prototype.toString.call(value).slice(8, -1)}.`
-      );
-      return;
-    }
-    for (let i = 0, l = el.options.length; i < l; i++) {
-      const option = el.options[i];
-      const optionValue = getValue(option);
-      if (isMultiple) {
-        if (isArray(value)) {
-          option.selected = looseIndexOf(value, optionValue) > -1;
-        } else {
-          option.selected = value.has(optionValue);
-        }
-      } else {
-        if (looseEqual(getValue(option), value)) {
-          if (el.selectedIndex !== i)
-            el.selectedIndex = i;
-          return;
-        }
-      }
-    }
-    if (!isMultiple && el.selectedIndex !== -1) {
-      el.selectedIndex = -1;
-    }
-  }
-  function getValue(el) {
-    return "_value" in el ? el._value : el.value;
-  }
   var rendererOptions = /* @__PURE__ */ extend({ patchProp }, nodeOps);
   var renderer;
   function ensureRenderer() {
@@ -30089,8 +29981,11 @@ Component that was made reactive: `,
   // sfc-script:/workspace/development/frappe-bench/apps/doc/doc/public/js/docs_admin/DocsAdmin.vue?type=script
   var DocsAdmin_default = {
     __name: "DocsAdmin",
+    props: {
+      pageControls: { type: Object, default: () => ({}) }
+    },
     setup(__props, { expose: __expose }) {
-      __expose();
+      const props = __props;
       const projects = ref([]);
       const versions = ref([]);
       const pageTree = ref([]);
@@ -30112,7 +30007,7 @@ Component that was made reactive: `,
           selectedPage: { type: String, default: "" }
         },
         emits: ["select"],
-        setup(props, { emit: emit2 }) {
+        setup(props2, { emit: emit2 }) {
           return () => {
             var _a11;
             return h("li", { class: "docs-admin__tree-node" }, [
@@ -30121,19 +30016,19 @@ Component that was made reactive: `,
                 {
                   class: {
                     "docs-admin__tree-button": true,
-                    "is-active": props.node.name === props.selectedPage
+                    "is-active": props2.node.name === props2.selectedPage
                   },
-                  onClick: () => emit2("select", props.node.name)
+                  onClick: () => emit2("select", props2.node.name)
                 },
-                props.node.title
+                props2.node.title
               ),
-              ((_a11 = props.node.children) == null ? void 0 : _a11.length) ? h(
+              ((_a11 = props2.node.children) == null ? void 0 : _a11.length) ? h(
                 "ul",
-                props.node.children.map(
+                props2.node.children.map(
                   (child) => h(DocTreeNode, {
                     key: child.name,
                     node: child,
-                    selectedPage: props.selectedPage,
+                    selectedPage: props2.selectedPage,
                     onSelect: (name) => emit2("select", name)
                   })
                 )
@@ -30148,6 +30043,11 @@ Component that was made reactive: `,
       onBeforeUnmount(() => {
         destroyMilkdown();
       });
+      __expose({
+        savePage,
+        setProject,
+        setVersion
+      });
       async function call(method, args = {}) {
         const result = await frappe.call({ method, args });
         return result.message || [];
@@ -30158,6 +30058,11 @@ Component that was made reactive: `,
         try {
           projects.value = await call("doc.doc.api.admin.get_project_spaces");
           selectedProject.value = ((_a11 = projects.value[0]) == null ? void 0 : _a11.name) || "";
+          setSelectOptions(
+            props.pageControls.project,
+            projects.value.map((project) => ({ value: project.name, label: project.title })),
+            selectedProject.value
+          );
           await onProjectChange();
         } finally {
           loading.value = false;
@@ -30170,6 +30075,26 @@ Component that was made reactive: `,
         pageTree.value = [];
         versions.value = selectedProject.value ? await call("doc.doc.api.admin.get_versions", { project: selectedProject.value }) : [];
         selectedVersion.value = ((_a11 = versions.value.find((version2) => version2.is_default)) == null ? void 0 : _a11.name) || ((_b = versions.value[0]) == null ? void 0 : _b.name) || "";
+        setSelectOptions(
+          props.pageControls.version,
+          versions.value.map((version2) => ({
+            value: version2.name,
+            label: version2.title || version2.version_key
+          })),
+          selectedVersion.value
+        );
+        await loadTree();
+      }
+      async function setProject(project) {
+        if (!project || project === selectedProject.value)
+          return;
+        selectedProject.value = project;
+        await onProjectChange();
+      }
+      async function setVersion(version2) {
+        if (!version2 || version2 === selectedVersion.value)
+          return;
+        selectedVersion.value = version2;
         await loadTree();
       }
       async function loadTree() {
@@ -30193,8 +30118,10 @@ Component that was made reactive: `,
         await mountMilkdown();
       }
       async function savePage() {
-        if (!currentPage.value)
+        if (!currentPage.value) {
+          frappe.show_alert({ message: __("\u8BF7\u9009\u62E9\u6587\u6863\u9875\u9762"), indicator: "orange" });
           return;
+        }
         saving.value = true;
         try {
           if (milkdownEditor.value) {
@@ -30216,6 +30143,13 @@ Component that was made reactive: `,
           return node2;
         }
         return null;
+      }
+      function setSelectOptions(field, options, value) {
+        if (!field)
+          return;
+        field.df.options = options.map((option) => ({ value: option.value, label: option.label }));
+        field.set_options(value);
+        field.set_value(value);
       }
       async function mountMilkdown() {
         destroyMilkdown();
@@ -30245,7 +30179,7 @@ Component that was made reactive: `,
         milkdownEditor.value.destroy();
         milkdownEditor.value = null;
       }
-      const __returned__ = { projects, versions, pageTree, selectedProject, selectedVersion, selectedPage, currentPage, contentMarkdown, loading, saving, milkdownRoot, milkdownEditor, milkdownAvailable, editorMode, DocTreeNode, call, loadProjects, onProjectChange, loadTree, selectPage, savePage, findFirstPage, mountMilkdown, destroyMilkdown, get defaultValueCtx() {
+      const __returned__ = { props, projects, versions, pageTree, selectedProject, selectedVersion, selectedPage, currentPage, contentMarkdown, loading, saving, milkdownRoot, milkdownEditor, milkdownAvailable, editorMode, DocTreeNode, call, loadProjects, onProjectChange, setProject, setVersion, loadTree, selectPage, savePage, findFirstPage, setSelectOptions, mountMilkdown, destroyMilkdown, get defaultValueCtx() {
         return defaultValueCtx;
       }, get Editor() {
         return Editor;
@@ -30267,90 +30201,42 @@ Component that was made reactive: `,
 
   // sfc-template:/workspace/development/frappe-bench/apps/doc/doc/public/js/docs_admin/DocsAdmin.vue?type=template
   var _hoisted_1 = { class: "docs-admin" };
-  var _hoisted_2 = { class: "docs-admin__toolbar" };
-  var _hoisted_3 = { class: "docs-admin__selectors" };
-  var _hoisted_4 = /* @__PURE__ */ createBaseVNode("span", null, "\u9879\u76EE", -1);
-  var _hoisted_5 = ["value"];
-  var _hoisted_6 = /* @__PURE__ */ createBaseVNode("span", null, "\u7248\u672C", -1);
-  var _hoisted_7 = ["value"];
-  var _hoisted_8 = ["disabled"];
-  var _hoisted_9 = { class: "docs-admin__body" };
-  var _hoisted_10 = { class: "docs-admin__tree" };
-  var _hoisted_11 = {
+  var _hoisted_2 = { class: "docs-admin__body" };
+  var _hoisted_3 = { class: "docs-admin__tree" };
+  var _hoisted_4 = {
     key: 0,
     class: "docs-admin__empty"
   };
-  var _hoisted_12 = {
+  var _hoisted_5 = {
     key: 1,
     class: "docs-admin__empty"
   };
-  var _hoisted_13 = { key: 2 };
-  var _hoisted_14 = { class: "docs-admin__editor" };
-  var _hoisted_15 = {
+  var _hoisted_6 = { key: 2 };
+  var _hoisted_7 = { class: "docs-admin__editor" };
+  var _hoisted_8 = {
     key: 0,
     class: "docs-admin__editor-shell"
   };
-  var _hoisted_16 = { class: "docs-admin__page-head" };
-  var _hoisted_17 = { class: "docs-admin__badge" };
-  var _hoisted_18 = {
+  var _hoisted_9 = { class: "docs-admin__page-head" };
+  var _hoisted_10 = { class: "docs-admin__badge" };
+  var _hoisted_11 = {
     key: 0,
     ref: "milkdownRoot",
     class: "docs-admin__milkdown"
   };
-  var _hoisted_19 = {
+  var _hoisted_12 = {
     key: 1,
     class: "docs-admin__welcome"
   };
-  var _hoisted_20 = /* @__PURE__ */ createBaseVNode("h2", null, "\u9009\u62E9\u5DE6\u4FA7\u6587\u6863\u5F00\u59CB\u7F16\u8F91", -1);
-  var _hoisted_21 = [
-    _hoisted_20
+  var _hoisted_13 = /* @__PURE__ */ createBaseVNode("h2", null, "\u9009\u62E9\u5DE6\u4FA7\u6587\u6863\u5F00\u59CB\u7F16\u8F91", -1);
+  var _hoisted_14 = [
+    _hoisted_13
   ];
   function render(_ctx4, _cache, $props, $setup, $data, $options) {
     return openBlock(), createElementBlock("div", _hoisted_1, [
-      createBaseVNode("header", _hoisted_2, [
-        createBaseVNode("div", _hoisted_3, [
-          createBaseVNode("label", null, [
-            _hoisted_4,
-            withDirectives(createBaseVNode("select", {
-              "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => $setup.selectedProject = $event),
-              onChange: $setup.onProjectChange
-            }, [
-              (openBlock(true), createElementBlock(Fragment, null, renderList($setup.projects, (project) => {
-                return openBlock(), createElementBlock("option", {
-                  key: project.name,
-                  value: project.name
-                }, toDisplayString(project.title), 9, _hoisted_5);
-              }), 128))
-            ], 544), [
-              [vModelSelect, $setup.selectedProject]
-            ])
-          ]),
-          createBaseVNode("label", null, [
-            _hoisted_6,
-            withDirectives(createBaseVNode("select", {
-              "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => $setup.selectedVersion = $event),
-              onChange: $setup.loadTree
-            }, [
-              (openBlock(true), createElementBlock(Fragment, null, renderList($setup.versions, (version2) => {
-                return openBlock(), createElementBlock("option", {
-                  key: version2.name,
-                  value: version2.name
-                }, toDisplayString(version2.title || version2.version_key), 9, _hoisted_7);
-              }), 128))
-            ], 544), [
-              [vModelSelect, $setup.selectedVersion]
-            ])
-          ])
-        ]),
-        createBaseVNode("button", {
-          class: "btn btn-primary btn-sm",
-          disabled: !$setup.currentPage || $setup.saving,
-          onClick: $setup.savePage
-        }, toDisplayString($setup.saving ? "\u4FDD\u5B58\u4E2D" : "\u4FDD\u5B58"), 9, _hoisted_8)
-      ]),
-      createBaseVNode("div", _hoisted_9, [
-        createBaseVNode("aside", _hoisted_10, [
-          $setup.loading ? (openBlock(), createElementBlock("div", _hoisted_11, "\u52A0\u8F7D\u4E2D")) : !$setup.pageTree.length ? (openBlock(), createElementBlock("div", _hoisted_12, "\u6682\u65E0\u6587\u6863\u9875\u9762")) : (openBlock(), createElementBlock("ul", _hoisted_13, [
+      createBaseVNode("div", _hoisted_2, [
+        createBaseVNode("aside", _hoisted_3, [
+          $setup.loading ? (openBlock(), createElementBlock("div", _hoisted_4, "\u52A0\u8F7D\u4E2D")) : !$setup.pageTree.length ? (openBlock(), createElementBlock("div", _hoisted_5, "\u6682\u65E0\u6587\u6863\u9875\u9762")) : (openBlock(), createElementBlock("ul", _hoisted_6, [
             (openBlock(true), createElementBlock(Fragment, null, renderList($setup.pageTree, (page) => {
               return openBlock(), createBlock($setup["DocTreeNode"], {
                 key: page.name,
@@ -30361,24 +30247,24 @@ Component that was made reactive: `,
             }), 128))
           ]))
         ]),
-        createBaseVNode("main", _hoisted_14, [
-          $setup.currentPage ? (openBlock(), createElementBlock("section", _hoisted_15, [
-            createBaseVNode("div", _hoisted_16, [
+        createBaseVNode("main", _hoisted_7, [
+          $setup.currentPage ? (openBlock(), createElementBlock("section", _hoisted_8, [
+            createBaseVNode("div", _hoisted_9, [
               createBaseVNode("div", null, [
                 createBaseVNode("h2", null, toDisplayString($setup.currentPage.title), 1),
                 createBaseVNode("p", null, toDisplayString($setup.currentPage.path) + " \xB7 " + toDisplayString($setup.currentPage.status), 1)
               ]),
-              createBaseVNode("span", _hoisted_17, toDisplayString($setup.editorMode), 1)
+              createBaseVNode("span", _hoisted_10, toDisplayString($setup.editorMode), 1)
             ]),
-            $setup.editorMode === "Milkdown" ? (openBlock(), createElementBlock("div", _hoisted_18, null, 512)) : withDirectives((openBlock(), createElementBlock("textarea", {
+            $setup.editorMode === "Milkdown" ? (openBlock(), createElementBlock("div", _hoisted_11, null, 512)) : withDirectives((openBlock(), createElementBlock("textarea", {
               key: 1,
-              "onUpdate:modelValue": _cache[2] || (_cache[2] = ($event) => $setup.contentMarkdown = $event),
+              "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => $setup.contentMarkdown = $event),
               class: "docs-admin__textarea",
               spellcheck: "false"
             }, null, 512)), [
               [vModelText, $setup.contentMarkdown]
             ])
-          ])) : (openBlock(), createElementBlock("section", _hoisted_19, [..._hoisted_21]))
+          ])) : (openBlock(), createElementBlock("section", _hoisted_12, [..._hoisted_14]))
         ])
       ])
     ]);
@@ -30390,13 +30276,21 @@ Component that was made reactive: `,
   var DocsAdmin_default2 = DocsAdmin_default;
 
   // ../doc/doc/public/js/docs_admin/docs_admin.bundle.js
-  function setup_docs_admin(wrapper) {
+  function setup_docs_admin(wrapper, options = {}) {
+    const rootRef = ref(null);
     const app = createApp({
+      setup() {
+        return { rootRef };
+      },
       render() {
-        return h(DocsAdmin_default2);
+        return h(DocsAdmin_default2, {
+          ref: rootRef,
+          pageControls: options.pageControls || {}
+        });
       }
     });
     app.mount(wrapper.get(0));
+    app.rootRef = rootRef;
     return app;
   }
   frappe.ui.setup_docs_admin = setup_docs_admin;
@@ -30411,4 +30305,4 @@ Component that was made reactive: `,
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
  * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  */
-//# sourceMappingURL=docs_admin.bundle.VSTUNLCU.js.map
+//# sourceMappingURL=docs_admin.bundle.E7AXOCC3.js.map

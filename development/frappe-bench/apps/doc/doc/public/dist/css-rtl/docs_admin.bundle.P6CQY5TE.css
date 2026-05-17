@@ -1,0 +1,156 @@
+/* ../../../../../tmp/tmp-51380-6QX9HApCDQ3l/doc/doc/public/css/docs_admin.bundle.css */
+.docs-admin {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 120px);
+  background: #f7f8fa;
+  color: #1f2933;
+}
+.docs-admin__toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #dde2e8;
+  background: #fff;
+}
+.docs-admin__selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.docs-admin__selectors label {
+  display: grid;
+  gap: 4px;
+  min-width: 180px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #52616f;
+}
+.docs-admin__selectors select {
+  height: 32px;
+  border: 1px solid #cfd7df;
+  border-radius: 6px;
+  background: #fff;
+  padding: 0 8px;
+  color: #1f2933;
+}
+.docs-admin__body {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  min-height: 0;
+  flex: 1;
+}
+.docs-admin__tree {
+  overflow: auto;
+  border-left: 1px solid #dde2e8;
+  background: #fff;
+  padding: 12px;
+}
+.docs-admin__tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.docs-admin__tree-node ul {
+  margin-right: 14px;
+}
+.docs-admin__tree-button {
+  width: 100%;
+  min-height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #344054;
+  padding: 6px 8px;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.docs-admin__tree-button:hover,
+.docs-admin__tree-button.is-active {
+  background: #eef4ff;
+  color: #1d4ed8;
+}
+.docs-admin__editor {
+  min-width: 0;
+  overflow: auto;
+  padding: 16px;
+}
+.docs-admin__editor-shell,
+.docs-admin__welcome {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+.docs-admin__page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.docs-admin__page-head h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
+}
+.docs-admin__page-head p {
+  margin: 4px 0 0;
+  color: #667085;
+  font-size: 13px;
+}
+.docs-admin__badge {
+  border: 1px solid #cfd7df;
+  border-radius: 999px;
+  padding: 3px 9px;
+  background: #fff;
+  color: #52616f;
+  font-size: 12px;
+}
+.docs-admin__milkdown,
+.docs-admin__textarea,
+.docs-admin__welcome {
+  min-height: 560px;
+  border: 1px solid #dde2e8;
+  border-radius: 8px;
+  background: #fff;
+}
+.docs-admin__milkdown {
+  padding: 8px;
+}
+.docs-admin__textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 18px;
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #1f2933;
+}
+.docs-admin__welcome,
+.docs-admin__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #667085;
+}
+@media (max-width: 900px) {
+  .docs-admin__body {
+    grid-template-columns: 1fr;
+  }
+  .docs-admin__tree {
+    max-height: 260px;
+    border-left: 0;
+    border-bottom: 1px solid #dde2e8;
+  }
+}
+/*# sourceMappingURL=docs_admin.bundle.P6CQY5TE.css.map */

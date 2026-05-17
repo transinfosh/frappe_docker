@@ -16,7 +16,7 @@ add_to_apps_screen = [
 	{
 		"name": app_name,
 		"title": "Doc",
-		"route": "/desk/doc",
+		"route": "/desk/docs-admin",
 	}
 ]
 

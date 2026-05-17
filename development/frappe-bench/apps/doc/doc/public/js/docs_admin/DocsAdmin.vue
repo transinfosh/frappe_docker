@@ -1,0 +1,246 @@
+<template>
+	<div class="docs-admin">
+		<header class="docs-admin__toolbar">
+			<div class="docs-admin__selectors">
+				<label>
+					<span>项目</span>
+					<select v-model="selectedProject" @change="onProjectChange">
+						<option v-for="project in projects" :key="project.name" :value="project.name">
+							{{ project.title }}
+						</option>
+					</select>
+				</label>
+				<label>
+					<span>版本</span>
+					<select v-model="selectedVersion" @change="loadTree">
+						<option v-for="version in versions" :key="version.name" :value="version.name">
+							{{ version.title || version.version_key }}
+						</option>
+					</select>
+				</label>
+			</div>
+			<button class="btn btn-primary btn-sm" :disabled="!currentPage || saving" @click="savePage">
+				{{ saving ? "保存中" : "保存" }}
+			</button>
+		</header>
+
+		<div class="docs-admin__body">
+			<aside class="docs-admin__tree">
+				<div v-if="loading" class="docs-admin__empty">加载中</div>
+				<div v-else-if="!pageTree.length" class="docs-admin__empty">暂无文档页面</div>
+				<ul v-else>
+					<DocTreeNode
+						v-for="page in pageTree"
+						:key="page.name"
+						:node="page"
+						:selected-page="selectedPage"
+						@select="selectPage"
+					/>
+				</ul>
+			</aside>
+
+			<main class="docs-admin__editor">
+				<section v-if="currentPage" class="docs-admin__editor-shell">
+					<div class="docs-admin__page-head">
+						<div>
+							<h2>{{ currentPage.title }}</h2>
+							<p>{{ currentPage.path }} · {{ currentPage.status }}</p>
+						</div>
+						<span class="docs-admin__badge">{{ editorMode }}</span>
+					</div>
+
+					<div v-if="editorMode === 'Milkdown'" ref="milkdownRoot" class="docs-admin__milkdown"></div>
+					<textarea
+						v-else
+						v-model="contentMarkdown"
+						class="docs-admin__textarea"
+						spellcheck="false"
+					></textarea>
+				</section>
+				<section v-else class="docs-admin__welcome">
+					<h2>选择左侧文档开始编辑</h2>
+				</section>
+			</main>
+		</div>
+	</div>
+</template>
+
+<script setup>
+import { defaultValueCtx, Editor, rootCtx } from "@milkdown/core";
+import { listener, listenerCtx } from "@milkdown/plugin-listener";
+import { commonmark } from "@milkdown/preset-commonmark";
+import { getMarkdown } from "@milkdown/utils";
+import { computed, defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
+
+const projects = ref([]);
+const versions = ref([]);
+const pageTree = ref([]);
+const selectedProject = ref("");
+const selectedVersion = ref("");
+const selectedPage = ref("");
+const currentPage = ref(null);
+const contentMarkdown = ref("");
+const loading = ref(false);
+const saving = ref(false);
+const milkdownRoot = ref(null);
+const milkdownEditor = ref(null);
+const milkdownAvailable = ref(true);
+
+const editorMode = computed(() => (milkdownAvailable.value ? "Milkdown" : "Markdown"));
+
+const DocTreeNode = defineComponent({
+	name: "DocTreeNode",
+	props: {
+		node: { type: Object, required: true },
+		selectedPage: { type: String, default: "" },
+	},
+	emits: ["select"],
+	setup(props, { emit }) {
+		return () =>
+			h("li", { class: "docs-admin__tree-node" }, [
+				h(
+					"button",
+					{
+						class: {
+							"docs-admin__tree-button": true,
+							"is-active": props.node.name === props.selectedPage,
+						},
+						onClick: () => emit("select", props.node.name),
+					},
+					props.node.title
+				),
+				props.node.children?.length
+					? h(
+							"ul",
+							props.node.children.map((child) =>
+								h(DocTreeNode, {
+									key: child.name,
+									node: child,
+									selectedPage: props.selectedPage,
+									onSelect: (name) => emit("select", name),
+								})
+							)
+						)
+					: null,
+			]);
+	},
+});
+
+onMounted(async () => {
+	await loadProjects();
+});
+
+onBeforeUnmount(() => {
+	destroyMilkdown();
+});
+
+async function call(method, args = {}) {
+	const result = await frappe.call({ method, args });
+	return result.message || [];
+}
+
+async function loadProjects() {
+	loading.value = true;
+	try {
+		projects.value = await call("doc.doc.api.admin.get_project_spaces");
+		selectedProject.value = projects.value[0]?.name || "";
+		await onProjectChange();
+	} finally {
+		loading.value = false;
+	}
+}
+
+async function onProjectChange() {
+	currentPage.value = null;
+	selectedPage.value = "";
+	pageTree.value = [];
+	versions.value = selectedProject.value
+		? await call("doc.doc.api.admin.get_versions", { project: selectedProject.value })
+		: [];
+	selectedVersion.value =
+		versions.value.find((version) => version.is_default)?.name || versions.value[0]?.name || "";
+	await loadTree();
+}
+
+async function loadTree() {
+	currentPage.value = null;
+	selectedPage.value = "";
+	destroyMilkdown();
+	if (!selectedVersion.value) {
+		pageTree.value = [];
+		return;
+	}
+
+	pageTree.value = await call("doc.doc.api.admin.get_page_tree", { doc_version: selectedVersion.value });
+	const firstPage = findFirstPage(pageTree.value);
+	if (firstPage) {
+		await selectPage(firstPage.name);
+	}
+}
+
+async function selectPage(pageName) {
+	selectedPage.value = pageName;
+	currentPage.value = await call("doc.doc.api.admin.get_page_detail", { page: pageName });
+	contentMarkdown.value = currentPage.value.content_markdown || "";
+	await mountMilkdown();
+}
+
+async function savePage() {
+	if (!currentPage.value) return;
+
+	saving.value = true;
+	try {
+		if (milkdownEditor.value) {
+			contentMarkdown.value = milkdownEditor.value.action(getMarkdown());
+		}
+		currentPage.value = await call("doc.doc.api.admin.save_page_content", {
+			page: currentPage.value.name,
+			content_markdown: contentMarkdown.value,
+		});
+		contentMarkdown.value = currentPage.value.content_markdown || "";
+		frappe.show_alert({ message: __("已保存"), indicator: "green" });
+		await mountMilkdown();
+	} finally {
+		saving.value = false;
+	}
+}
+
+function findFirstPage(nodes) {
+	for (const node of nodes) {
+		return node;
+	}
+	return null;
+}
+
+async function mountMilkdown() {
+	destroyMilkdown();
+	if (!milkdownAvailable.value || !currentPage.value) return;
+
+	await nextTick();
+	if (!milkdownRoot.value) return;
+
+	try {
+		const editor = Editor.make()
+			.config((ctx) => {
+				ctx.set(rootCtx, milkdownRoot.value);
+				ctx.set(defaultValueCtx, contentMarkdown.value);
+				ctx.get(listenerCtx).markdownUpdated((_ctx, markdown) => {
+					contentMarkdown.value = markdown;
+				});
+			})
+			.use(commonmark)
+			.use(listener);
+		await editor.create();
+		milkdownEditor.value = editor;
+	} catch (error) {
+		console.warn("Milkdown 初始化失败，已切换到 Markdown 文本编辑。", error);
+		milkdownAvailable.value = false;
+	}
+}
+
+function destroyMilkdown() {
+	if (!milkdownEditor.value) return;
+	milkdownEditor.value.destroy();
+	milkdownEditor.value = null;
+}
+</script>

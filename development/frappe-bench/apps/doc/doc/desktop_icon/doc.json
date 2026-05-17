@@ -6,7 +6,7 @@
  "icon_type": "App",
  "idx": 0,
  "label": "Doc",
- "link": "/desk/doc",
+ "link": "/desk/docs-admin",
  "link_type": "External",
  "modified_by": "Administrator",
  "name": "Doc",

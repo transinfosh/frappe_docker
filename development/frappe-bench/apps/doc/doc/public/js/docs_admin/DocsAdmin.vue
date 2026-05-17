@@ -42,10 +42,10 @@
 </template>
 
 <script setup>
-import { defaultValueCtx, Editor, rootCtx } from "@milkdown/core";
+import { defaultValueCtx, Editor, editorViewOptionsCtx, rootCtx } from "@milkdown/core";
 import { listener, listenerCtx } from "@milkdown/plugin-listener";
 import { commonmark } from "@milkdown/preset-commonmark";
-import { getMarkdown } from "@milkdown/utils";
+import { getMarkdown, markdownToSlice } from "@milkdown/utils";
 import { computed, defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 
 const props = defineProps({
@@ -248,6 +248,18 @@ async function mountMilkdown() {
 			.config((ctx) => {
 				ctx.set(rootCtx, milkdownRoot.value);
 				ctx.set(defaultValueCtx, contentMarkdown.value);
+				ctx.update(editorViewOptionsCtx, (options) => ({
+					...options,
+					handlePaste(view, event) {
+						const text = event.clipboardData?.getData("text/plain") || "";
+						if (!shouldParseMarkdownPaste(text)) return false;
+
+						event.preventDefault();
+						const slice = markdownToSlice(text)(ctx);
+						view.dispatch(view.state.tr.replaceSelection(slice).scrollIntoView());
+						return true;
+					},
+				}));
 				ctx.get(listenerCtx).markdownUpdated((_ctx, markdown) => {
 					contentMarkdown.value = markdown;
 				});
@@ -260,6 +272,23 @@ async function mountMilkdown() {
 		console.warn("Milkdown 初始化失败，已切换到 Markdown 文本编辑。", error);
 		milkdownAvailable.value = false;
 	}
+}
+
+function shouldParseMarkdownPaste(text) {
+	if (!text.trim()) return false;
+
+	return [
+		/^#{1,6}\s+\S/m,
+		/^```/m,
+		/^\s*[-*+]\s+\S/m,
+		/^\s*\d+\.\s+\S/m,
+		/^\s*>\s+\S/m,
+		/^\|.+\|\s*$/m,
+		/^\s*\|?\s*:?-{3,}:?\s*\|/m,
+		/\[[^\]]+\]\([^)]+\)/,
+		/(\*\*|__)[^*_]+(\*\*|__)/,
+		/`[^`]+`/,
+	].some((pattern) => pattern.test(text));
 }
 
 function destroyMilkdown() {

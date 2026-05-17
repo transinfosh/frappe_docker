@@ -27719,6 +27719,14 @@ Component that was made reactive: `,
       return serializer2(doc5);
     };
   }
+  function markdownToSlice(markdown) {
+    return (ctx) => {
+      const doc5 = ctx.get(parserCtx)(markdown);
+      const schema3 = ctx.get(schemaCtx);
+      const dom = DOMSerializer.fromSchema(schema3).serializeFragment(doc5.content);
+      return DOMParser.fromSchema(schema3).parseSlice(dom);
+    };
+  }
 
   // ../doc/node_modules/prosemirror-schema-list/dist/index.js
   function splitListItem(itemType, itemAttrs) {
@@ -30162,6 +30170,18 @@ Component that was made reactive: `,
           const editor = Editor.make().config((ctx) => {
             ctx.set(rootCtx, milkdownRoot.value);
             ctx.set(defaultValueCtx, contentMarkdown.value);
+            ctx.update(editorViewOptionsCtx, (options) => __spreadProps(__spreadValues({}, options), {
+              handlePaste(view, event) {
+                var _a11;
+                const text4 = ((_a11 = event.clipboardData) == null ? void 0 : _a11.getData("text/plain")) || "";
+                if (!shouldParseMarkdownPaste(text4))
+                  return false;
+                event.preventDefault();
+                const slice = markdownToSlice(text4)(ctx);
+                view.dispatch(view.state.tr.replaceSelection(slice).scrollIntoView());
+                return true;
+              }
+            }));
             ctx.get(listenerCtx).markdownUpdated((_ctx4, markdown) => {
               contentMarkdown.value = markdown;
             });
@@ -30173,16 +30193,34 @@ Component that was made reactive: `,
           milkdownAvailable.value = false;
         }
       }
+      function shouldParseMarkdownPaste(text4) {
+        if (!text4.trim())
+          return false;
+        return [
+          /^#{1,6}\s+\S/m,
+          /^```/m,
+          /^\s*[-*+]\s+\S/m,
+          /^\s*\d+\.\s+\S/m,
+          /^\s*>\s+\S/m,
+          /^\|.+\|\s*$/m,
+          /^\s*\|?\s*:?-{3,}:?\s*\|/m,
+          /\[[^\]]+\]\([^)]+\)/,
+          /(\*\*|__)[^*_]+(\*\*|__)/,
+          /`[^`]+`/
+        ].some((pattern) => pattern.test(text4));
+      }
       function destroyMilkdown() {
         if (!milkdownEditor.value)
           return;
         milkdownEditor.value.destroy();
         milkdownEditor.value = null;
       }
-      const __returned__ = { props, projects, versions, pageTree, selectedProject, selectedVersion, selectedPage, currentPage, contentMarkdown, loading, saving, milkdownRoot, milkdownEditor, milkdownAvailable, editorMode, DocTreeNode, call, loadProjects, onProjectChange, setProject, setVersion, loadTree, selectPage, savePage, findFirstPage, setSelectOptions, mountMilkdown, destroyMilkdown, get defaultValueCtx() {
+      const __returned__ = { props, projects, versions, pageTree, selectedProject, selectedVersion, selectedPage, currentPage, contentMarkdown, loading, saving, milkdownRoot, milkdownEditor, milkdownAvailable, editorMode, DocTreeNode, call, loadProjects, onProjectChange, setProject, setVersion, loadTree, selectPage, savePage, findFirstPage, setSelectOptions, mountMilkdown, shouldParseMarkdownPaste, destroyMilkdown, get defaultValueCtx() {
         return defaultValueCtx;
       }, get Editor() {
         return Editor;
+      }, get editorViewOptionsCtx() {
+        return editorViewOptionsCtx;
       }, get rootCtx() {
         return rootCtx;
       }, get listener() {
@@ -30193,6 +30231,8 @@ Component that was made reactive: `,
         return commonmark;
       }, get getMarkdown() {
         return getMarkdown;
+      }, get markdownToSlice() {
+        return markdownToSlice;
       }, computed: computed2, defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref };
       Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
       return __returned__;
@@ -30305,4 +30345,4 @@ Component that was made reactive: `,
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
  * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  */
-//# sourceMappingURL=docs_admin.bundle.E7AXOCC3.js.map
+//# sourceMappingURL=docs_admin.bundle.IENG36I3.js.map

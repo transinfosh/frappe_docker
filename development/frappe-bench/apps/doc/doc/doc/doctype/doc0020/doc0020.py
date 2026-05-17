@@ -6,6 +6,10 @@ from doc.doc.services.slug import normalize_slug, validate_slug
 
 
 class DOC0020(Document):
+	def before_naming(self):
+		self.set_defaults()
+		self.validate_version_key()
+
 	def validate(self):
 		self.set_defaults()
 		self.validate_version_key()
@@ -27,9 +31,12 @@ class DOC0020(Document):
 		self.version_key = validate_slug(normalize_slug(self.version_key or self.title), allow_dot=True)
 
 	def validate_unique_version_key(self):
+		filters = {"project": self.project, "version_key": self.version_key}
+		if not self.is_new():
+			filters["name"] = ["!=", self.name]
 		existing = frappe.db.exists(
 			"DOC0020",
-			{"project": self.project, "version_key": self.version_key, "name": ["!=", self.name]},
+			filters,
 		)
 		if existing:
 			frappe.throw(_("同一项目下文档版本 {0} 已存在。").format(self.version_key))

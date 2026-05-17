@@ -18,6 +18,8 @@ class DOC0030(Document):
 		self.create_revision("manual_save")
 
 	def on_update(self):
+		if self.flags.in_insert:
+			return
 		if self.flags.skip_revision:
 			return
 		if self.has_value_changed("content_markdown") or self.has_value_changed("title") or self.has_value_changed("summary"):

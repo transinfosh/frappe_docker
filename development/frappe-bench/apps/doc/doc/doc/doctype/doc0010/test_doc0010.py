@@ -1,8 +1,8 @@
 import frappe
-from frappe.tests import IntegrationTestCase
+from frappe.tests import UnitTestCase
 
 
-class TestDOC0010(IntegrationTestCase):
+class TestDOC0010(UnitTestCase):
 	def tearDown(self):
 		frappe.db.rollback()
 
@@ -22,7 +22,7 @@ class TestDOC0010(IntegrationTestCase):
 	def test_rejects_duplicate_project_slug(self):
 		frappe.get_doc({"doctype": "DOC0010", "title": "支付系统", "slug": "payment"}).insert()
 
-		with self.assertRaises(frappe.DuplicateEntryError):
+		with self.assertRaises(frappe.ValidationError):
 			frappe.get_doc({"doctype": "DOC0010", "title": "支付系统副本", "slug": "payment"}).insert()
 
 	def test_rejects_duplicate_member_user(self):

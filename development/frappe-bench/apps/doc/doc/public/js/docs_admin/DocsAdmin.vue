@@ -199,7 +199,7 @@ async function savePage() {
 	saving.value = true;
 	try {
 		if (milkdownEditor.value) {
-			contentMarkdown.value = milkdownEditor.value.action(getMarkdown());
+			contentMarkdown.value = normalizeMermaidMarkdown(milkdownEditor.value.action(getMarkdown()));
 		}
 		currentPage.value = await call("doc.doc.api.admin.save_page_content", {
 			page: currentPage.value.name,
@@ -281,6 +281,66 @@ function shouldParseMarkdownPaste(text) {
 		/(\*\*|__)[^*_]+(\*\*|__)/,
 		/`[^`]+`/,
 	].some((pattern) => pattern.test(text));
+}
+
+function normalizeMermaidMarkdown(markdown) {
+	return normalizeIndentedMermaidBlocks(normalizeFencedMermaidBlocks(markdown || ""));
+}
+
+function normalizeFencedMermaidBlocks(markdown) {
+	return markdown.replace(/```(\w*)\n([\s\S]*?)```/g, (match, language, content) => {
+		if (language && language !== "mermaid") return match;
+
+		const decodedContent = decodeMermaidEntities(content);
+		if (language === "mermaid" || isMermaidContent(decodedContent)) {
+			return `\`\`\`mermaid\n${decodedContent.replace(/\s+$/, "")}\n\`\`\``;
+		}
+		return match;
+	});
+}
+
+function normalizeIndentedMermaidBlocks(markdown) {
+	const lines = markdown.split("\n");
+	const normalized = [];
+
+	for (let index = 0; index < lines.length; index += 1) {
+		const line = lines[index];
+		if (!/^( {4}|\t)/.test(line)) {
+			normalized.push(line);
+			continue;
+		}
+
+		const block = [];
+		while (index < lines.length && /^( {4}|\t|$)/.test(lines[index])) {
+			block.push(lines[index].replace(/^( {4}|\t)/, ""));
+			index += 1;
+		}
+		index -= 1;
+
+		const content = decodeMermaidEntities(block.join("\n").replace(/\s+$/, ""));
+		if (isMermaidContent(content)) {
+			normalized.push("```mermaid", content, "```");
+		} else {
+			normalized.push(...block.map((blockLine) => (blockLine ? `    ${blockLine}` : "")));
+		}
+	}
+
+	return normalized.join("\n");
+}
+
+function isMermaidContent(content) {
+	return /^\s*(flowchart|graph|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|journey|pie|mindmap|timeline|gitGraph|quadrantChart)\b/m.test(
+		content
+	);
+}
+
+function decodeMermaidEntities(content) {
+	return content
+		.replace(/&gt;/g, ">")
+		.replace(/&lt;/g, "<")
+		.replace(/&amp;/g, "&")
+		.replace(/&quot;/g, '"')
+		.replace(/&#39;/g, "'");
 }
 
 function destroyMilkdown() {

@@ -30111,7 +30111,7 @@ Component that was made reactive: `,
         saving.value = true;
         try {
           if (milkdownEditor.value) {
-            contentMarkdown.value = milkdownEditor.value.action(getMarkdown());
+            contentMarkdown.value = normalizeMermaidMarkdown(milkdownEditor.value.action(getMarkdown()));
           }
           currentPage.value = await call("doc.doc.api.admin.save_page_content", {
             page: currentPage.value.name,
@@ -30187,13 +30187,61 @@ Component that was made reactive: `,
           /`[^`]+`/
         ].some((pattern) => pattern.test(text4));
       }
+      function normalizeMermaidMarkdown(markdown) {
+        return normalizeIndentedMermaidBlocks(normalizeFencedMermaidBlocks(markdown || ""));
+      }
+      function normalizeFencedMermaidBlocks(markdown) {
+        return markdown.replace(/```(\w*)\n([\s\S]*?)```/g, (match, language, content3) => {
+          if (language && language !== "mermaid")
+            return match;
+          const decodedContent = decodeMermaidEntities(content3);
+          if (language === "mermaid" || isMermaidContent(decodedContent)) {
+            return `\`\`\`mermaid
+${decodedContent.replace(/\s+$/, "")}
+\`\`\``;
+          }
+          return match;
+        });
+      }
+      function normalizeIndentedMermaidBlocks(markdown) {
+        const lines = markdown.split("\n");
+        const normalized = [];
+        for (let index2 = 0; index2 < lines.length; index2 += 1) {
+          const line = lines[index2];
+          if (!/^( {4}|\t)/.test(line)) {
+            normalized.push(line);
+            continue;
+          }
+          const block = [];
+          while (index2 < lines.length && /^( {4}|\t|$)/.test(lines[index2])) {
+            block.push(lines[index2].replace(/^( {4}|\t)/, ""));
+            index2 += 1;
+          }
+          index2 -= 1;
+          const content3 = decodeMermaidEntities(block.join("\n").replace(/\s+$/, ""));
+          if (isMermaidContent(content3)) {
+            normalized.push("```mermaid", content3, "```");
+          } else {
+            normalized.push(...block.map((blockLine) => blockLine ? `    ${blockLine}` : ""));
+          }
+        }
+        return normalized.join("\n");
+      }
+      function isMermaidContent(content3) {
+        return /^\s*(flowchart|graph|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|journey|pie|mindmap|timeline|gitGraph|quadrantChart)\b/m.test(
+          content3
+        );
+      }
+      function decodeMermaidEntities(content3) {
+        return content3.replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+      }
       function destroyMilkdown() {
         if (!milkdownEditor.value)
           return;
         milkdownEditor.value.destroy();
         milkdownEditor.value = null;
       }
-      const __returned__ = { props, projects, versions, pageTree, selectedProject, selectedVersion, selectedPage, currentPage, contentMarkdown, loading, saving, milkdownRoot, milkdownEditor, milkdownAvailable, editorMode, DocTreeNode, call, loadProjects, onProjectChange, setProject, setVersion, loadTree, selectPage, savePage, findFirstPage, setSelectOptions, mountMilkdown, shouldParseMarkdownPaste, destroyMilkdown, get defaultValueCtx() {
+      const __returned__ = { props, projects, versions, pageTree, selectedProject, selectedVersion, selectedPage, currentPage, contentMarkdown, loading, saving, milkdownRoot, milkdownEditor, milkdownAvailable, editorMode, DocTreeNode, call, loadProjects, onProjectChange, setProject, setVersion, loadTree, selectPage, savePage, findFirstPage, setSelectOptions, mountMilkdown, shouldParseMarkdownPaste, normalizeMermaidMarkdown, normalizeFencedMermaidBlocks, normalizeIndentedMermaidBlocks, isMermaidContent, decodeMermaidEntities, destroyMilkdown, get defaultValueCtx() {
         return defaultValueCtx;
       }, get Editor() {
         return Editor;
@@ -30314,4 +30362,4 @@ Component that was made reactive: `,
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
  * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  */
-//# sourceMappingURL=docs_admin.bundle.PQZ67OPC.js.map
+//# sourceMappingURL=docs_admin.bundle.ZSF7GRQJ.js.map

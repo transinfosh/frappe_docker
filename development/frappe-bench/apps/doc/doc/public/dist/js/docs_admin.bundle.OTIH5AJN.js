@@ -30119,7 +30119,6 @@ Component that was made reactive: `,
           });
           contentMarkdown.value = currentPage.value.content_markdown || "";
           frappe.show_alert({ message: __("\u5DF2\u4FDD\u5B58"), indicator: "green" });
-          await mountMilkdown();
         } finally {
           saving.value = false;
         }
@@ -30362,4 +30361,4 @@ ${decodedContent.replace(/\s+$/, "")}
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
  * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  */
-//# sourceMappingURL=docs_admin.bundle.ZSF7GRQJ.js.map
+//# sourceMappingURL=docs_admin.bundle.OTIH5AJN.js.map

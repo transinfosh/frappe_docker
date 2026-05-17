@@ -207,7 +207,6 @@ async function savePage() {
 		});
 		contentMarkdown.value = currentPage.value.content_markdown || "";
 		frappe.show_alert({ message: __("已保存"), indicator: "green" });
-		await mountMilkdown();
 	} finally {
 		saving.value = false;
 	}

@@ -136,6 +136,28 @@
 
 .docs-admin__milkdown {
 	padding: 8px;
+	cursor: text;
+}
+
+.docs-admin__milkdown .ProseMirror {
+	min-height: 520px;
+	padding: 16px;
+	border-radius: 6px;
+	outline: none;
+	white-space: pre-wrap;
+	word-break: break-word;
+	cursor: text;
+}
+
+.docs-admin__milkdown .ProseMirror p {
+	margin: 0 0 10px;
+}
+
+.docs-admin__milkdown .ProseMirror h1,
+.docs-admin__milkdown .ProseMirror h2,
+.docs-admin__milkdown .ProseMirror h3 {
+	margin: 18px 0 10px;
+	font-weight: 650;
 }
 
 .docs-admin__textarea {

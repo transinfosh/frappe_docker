@@ -12,15 +12,13 @@ app_home = "/docs-admin"
 # required_apps = []
 
 # Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "doc",
-# 		"logo": "/assets/doc/logo.png",
-# 		"title": "文档",
-# 		"route": "/doc",
-# 		"has_permission": "doc.api.permission.has_app_permission"
-# 	}
-# ]
+add_to_apps_screen = [
+	{
+		"name": app_name,
+		"title": "Doc",
+		"route": "/desk/doc",
+	}
+]
 
 # Includes in <head>
 # ------------------

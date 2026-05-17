@@ -10,6 +10,9 @@ frappe.pages["docs-admin"].on_page_load = function (wrapper) {
 		single_column: true,
 	});
 
+	const controlsArea = $('<div class="docs-admin-page-controls"></div>').insertBefore(
+		docsAdminPage.btn_primary
+	);
 	projectField = docsAdminPage.add_field({
 		fieldname: "doc_project",
 		label: __("项目"),
@@ -17,7 +20,7 @@ frappe.pages["docs-admin"].on_page_load = function (wrapper) {
 		change() {
 			docsAdminApp?.rootRef?.value?.setProject(this.get_value());
 		},
-	});
+	}, controlsArea);
 	versionField = docsAdminPage.add_field({
 		fieldname: "doc_version",
 		label: __("版本"),
@@ -25,7 +28,7 @@ frappe.pages["docs-admin"].on_page_load = function (wrapper) {
 		change() {
 			docsAdminApp?.rootRef?.value?.setVersion(this.get_value());
 		},
-	});
+	}, controlsArea);
 	docsAdminPage.set_primary_action(__("保存"), () => {
 		docsAdminApp?.rootRef?.value?.savePage();
 	});

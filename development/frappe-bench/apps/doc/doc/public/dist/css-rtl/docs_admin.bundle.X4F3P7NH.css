@@ -1,10 +1,27 @@
-/* ../../../../../tmp/tmp-69877-I824vQAJoCXS/doc/doc/public/css/docs_admin.bundle.css */
+/* ../../../../../tmp/tmp-78169-khLA4cLYSZoL/doc/doc/public/css/docs_admin.bundle.css */
 .docs-admin {
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 120px);
   background: #f7f8fa;
   color: #1f2933;
+}
+.docs-admin-page-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+}
+.page-actions .docs-admin-page-controls .frappe-control {
+  flex: 0 0 180px;
+  width: 180px;
+  max-width: 180px;
+  margin: 0;
+  padding: 0;
+}
+.page-actions .docs-admin-page-controls .form-control {
+  height: var(--btn-height);
+  min-height: var(--btn-height);
 }
 .docs-admin__body {
   display: grid;
@@ -14,7 +31,7 @@
 }
 .docs-admin__tree {
   overflow: auto;
-  border-right: 1px solid #dde2e8;
+  border-left: 1px solid #dde2e8;
   background: #fff;
   padding: 12px;
 }
@@ -24,7 +41,7 @@
   padding: 0;
 }
 .docs-admin__tree-node ul {
-  margin-left: 14px;
+  margin-right: 14px;
 }
 .docs-admin__tree-button {
   width: 100%;
@@ -34,7 +51,7 @@
   background: transparent;
   color: #344054;
   padding: 6px 8px;
-  text-align: left;
+  text-align: right;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -138,8 +155,11 @@
   }
   .docs-admin__tree {
     max-height: 260px;
-    border-right: 0;
+    border-left: 0;
     border-bottom: 1px solid #dde2e8;
   }
+  .docs-admin-page-controls {
+    display: none;
+  }
 }
-/*# sourceMappingURL=docs_admin.bundle.6ON4I775.css.map */
+/*# sourceMappingURL=docs_admin.bundle.X4F3P7NH.css.map */

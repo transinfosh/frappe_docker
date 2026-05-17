@@ -6,6 +6,26 @@
 	color: #1f2933;
 }
 
+.docs-admin-page-controls {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-right: 8px;
+}
+
+.page-actions .docs-admin-page-controls .frappe-control {
+	flex: 0 0 180px;
+	width: 180px;
+	max-width: 180px;
+	margin: 0;
+	padding: 0;
+}
+
+.page-actions .docs-admin-page-controls .form-control {
+	height: var(--btn-height);
+	min-height: var(--btn-height);
+}
+
 .docs-admin__body {
 	display: grid;
 	grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
@@ -153,5 +173,9 @@
 		max-height: 260px;
 		border-right: 0;
 		border-bottom: 1px solid #dde2e8;
+	}
+
+	.docs-admin-page-controls {
+		display: none;
 	}
 }

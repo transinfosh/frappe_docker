@@ -321,28 +321,6 @@
   function includeBooleanAttr(value) {
     return !!value || value === "";
   }
-  var toDisplayString = (val) => {
-    return isString(val) ? val : val == null ? "" : isArray(val) || isObject(val) && (val.toString === objectToString || !isFunction(val.toString)) ? JSON.stringify(val, replacer, 2) : String(val);
-  };
-  var replacer = (_key, val) => {
-    if (val && val.__v_isRef) {
-      return replacer(_key, val.value);
-    } else if (isMap(val)) {
-      return {
-        [`Map(${val.size})`]: [...val.entries()].reduce((entries, [key3, val2]) => {
-          entries[`${key3} =>`] = val2;
-          return entries;
-        }, {})
-      };
-    } else if (isSet(val)) {
-      return {
-        [`Set(${val.size})`]: [...val.values()]
-      };
-    } else if (isObject(val) && !isArray(val) && !isPlainObject(val)) {
-      return String(val);
-    }
-    return val;
-  };
 
   // node_modules/@vue/reactivity/dist/reactivity.esm-bundler.js
   function warn(msg, ...args) {
@@ -30257,20 +30235,18 @@ Component that was made reactive: `,
     key: 0,
     class: "docs-admin__editor-shell"
   };
-  var _hoisted_9 = { class: "docs-admin__page-head" };
-  var _hoisted_10 = { class: "docs-admin__badge" };
-  var _hoisted_11 = {
+  var _hoisted_9 = {
     key: 0,
     ref: "milkdownRoot",
     class: "docs-admin__milkdown"
   };
-  var _hoisted_12 = {
+  var _hoisted_10 = {
     key: 1,
     class: "docs-admin__welcome"
   };
-  var _hoisted_13 = /* @__PURE__ */ createBaseVNode("h2", null, "\u9009\u62E9\u5DE6\u4FA7\u6587\u6863\u5F00\u59CB\u7F16\u8F91", -1);
-  var _hoisted_14 = [
-    _hoisted_13
+  var _hoisted_11 = /* @__PURE__ */ createBaseVNode("h2", null, "\u9009\u62E9\u5DE6\u4FA7\u6587\u6863\u5F00\u59CB\u7F16\u8F91", -1);
+  var _hoisted_12 = [
+    _hoisted_11
   ];
   function render(_ctx4, _cache, $props, $setup, $data, $options) {
     return openBlock(), createElementBlock("div", _hoisted_1, [
@@ -30289,14 +30265,7 @@ Component that was made reactive: `,
         ]),
         createBaseVNode("main", _hoisted_7, [
           $setup.currentPage ? (openBlock(), createElementBlock("section", _hoisted_8, [
-            createBaseVNode("div", _hoisted_9, [
-              createBaseVNode("div", null, [
-                createBaseVNode("h2", null, toDisplayString($setup.currentPage.title), 1),
-                createBaseVNode("p", null, toDisplayString($setup.currentPage.path) + " \xB7 " + toDisplayString($setup.currentPage.status), 1)
-              ]),
-              createBaseVNode("span", _hoisted_10, toDisplayString($setup.editorMode), 1)
-            ]),
-            $setup.editorMode === "Milkdown" ? (openBlock(), createElementBlock("div", _hoisted_11, null, 512)) : withDirectives((openBlock(), createElementBlock("textarea", {
+            $setup.editorMode === "Milkdown" ? (openBlock(), createElementBlock("div", _hoisted_9, null, 512)) : withDirectives((openBlock(), createElementBlock("textarea", {
               key: 1,
               "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => $setup.contentMarkdown = $event),
               class: "docs-admin__textarea",
@@ -30304,7 +30273,7 @@ Component that was made reactive: `,
             }, null, 512)), [
               [vModelText, $setup.contentMarkdown]
             ])
-          ])) : (openBlock(), createElementBlock("section", _hoisted_12, [..._hoisted_14]))
+          ])) : (openBlock(), createElementBlock("section", _hoisted_10, [..._hoisted_12]))
         ])
       ])
     ]);
@@ -30345,4 +30314,4 @@ Component that was made reactive: `,
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
  * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  */
-//# sourceMappingURL=docs_admin.bundle.IENG36I3.js.map
+//# sourceMappingURL=docs_admin.bundle.PQZ67OPC.js.map

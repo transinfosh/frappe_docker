@@ -1,7 +1,8 @@
 .docs-admin {
 	display: flex;
 	flex-direction: column;
-	min-height: calc(100vh - 120px);
+	height: calc(100vh - var(--navbar-height) - var(--page-head-height));
+	min-height: 0;
 	background: #f7f8fa;
 	color: #1f2933;
 }
@@ -30,6 +31,7 @@
 	display: grid;
 	grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
 	min-height: 0;
+	height: 100%;
 	flex: 1;
 }
 
@@ -72,63 +74,38 @@
 
 .docs-admin__editor {
 	min-width: 0;
-	overflow: auto;
-	padding: 16px;
+	overflow: hidden;
+	padding: 0;
 }
 
 .docs-admin__editor-shell,
 .docs-admin__welcome {
-	max-width: 1040px;
-	margin: 0 auto;
-}
-
-.docs-admin__page-head {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	margin-bottom: 12px;
-}
-
-.docs-admin__page-head h2 {
+	width: 100%;
+	height: 100%;
 	margin: 0;
-	font-size: 20px;
-	font-weight: 650;
-}
-
-.docs-admin__page-head p {
-	margin: 4px 0 0;
-	color: #667085;
-	font-size: 13px;
-}
-
-.docs-admin__badge {
-	border: 1px solid #cfd7df;
-	border-radius: 999px;
-	padding: 3px 9px;
-	background: #fff;
-	color: #52616f;
-	font-size: 12px;
 }
 
 .docs-admin__milkdown,
 .docs-admin__textarea,
 .docs-admin__welcome {
-	min-height: 560px;
-	border: 1px solid #dde2e8;
-	border-radius: 8px;
+	min-height: 0;
+	height: 100%;
+	border: 0;
+	border-radius: 0;
 	background: #fff;
 }
 
 .docs-admin__milkdown {
-	padding: 8px;
+	overflow: auto;
+	padding: 24px;
 	cursor: text;
 }
 
 .docs-admin__milkdown .ProseMirror {
-	min-height: 520px;
-	padding: 16px;
-	border-radius: 6px;
+	min-height: 100%;
+	max-width: 1040px;
+	margin: 0 auto;
+	padding: 0;
 	outline: none;
 	white-space: pre-wrap;
 	word-break: break-word;
@@ -148,8 +125,9 @@
 
 .docs-admin__textarea {
 	width: 100%;
+	height: 100%;
 	resize: vertical;
-	padding: 18px;
+	padding: 24px;
 	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 	font-size: 14px;
 	line-height: 1.7;

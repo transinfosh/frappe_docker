@@ -17,14 +17,6 @@
 
 			<main class="docs-admin__editor">
 				<section v-if="currentPage" class="docs-admin__editor-shell">
-					<div class="docs-admin__page-head">
-						<div>
-							<h2>{{ currentPage.title }}</h2>
-							<p>{{ currentPage.path }} · {{ currentPage.status }}</p>
-						</div>
-						<span class="docs-admin__badge">{{ editorMode }}</span>
-					</div>
-
 					<div v-if="editorMode === 'Milkdown'" ref="milkdownRoot" class="docs-admin__milkdown"></div>
 					<textarea
 						v-else

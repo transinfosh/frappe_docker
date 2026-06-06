@@ -14,11 +14,11 @@ services:
 
   # Enable PostgreSQL only if you use it, see development/README.md for more information.
   postgresql:
-    image: postgres:14
+    image: postgres:18-bookworm
     environment:
       POSTGRES_PASSWORD: 123
     volumes:
-      - postgresql-data:/var/lib/postgresql/data
+      - postgresql-data:/var/lib/postgresql
 
   # Enable Mailpit if you need to test outgoing mail services
   # See https://mailpit.axllent.org/
@@ -56,7 +56,7 @@ services:
     ports:
       - 8000-8005:8000-8005
       - 9000-9005:9000-9005
-      - 23:22 #for ssh service, if not use, comment this line
+      - 127.0.0.1:2222:22 #for ssh service, if not use, comment this line
   # enable the below service if you need Cypress UI Tests to be executed
   # Before enabling ensure install_x11_deps.sh has been executed and display variable is exported.
   # Run install_x11_deps.sh again if DISPLAY is not set

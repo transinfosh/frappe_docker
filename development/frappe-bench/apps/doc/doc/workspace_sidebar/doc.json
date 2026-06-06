@@ -1,0 +1,63 @@
+{
+ "app": "doc",
+ "docstatus": 0,
+ "doctype": "Workspace Sidebar",
+ "header_icon": "file-text",
+ "idx": 0,
+ "items": [
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "home",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Home",
+   "link_to": "Doc",
+   "link_type": "Workspace",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "folder-kanban",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "\u6587\u6863\u9879\u76ee",
+   "link_to": "DOC0010",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "git-branch",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "\u6587\u6863\u7248\u672c",
+   "link_to": "DOC0020",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "file-text",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "\u6587\u6863\u9875\u9762",
+   "link_to": "DOC0030",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  }
+ ],
+ "modified_by": "Administrator",
+ "module": "Doc",
+ "name": "Doc",
+ "owner": "Administrator",
+ "standard": 1,
+ "title": "Doc"
+}

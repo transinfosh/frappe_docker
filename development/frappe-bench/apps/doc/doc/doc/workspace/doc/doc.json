@@ -1,0 +1,94 @@
+{
+ "app": "doc",
+ "charts": [],
+ "content": "[{\"id\":\"doc-header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>\\u6587\\u6863\\u5e73\\u53f0</b></span>\",\"col\":12}},{\"id\":\"doc-project-shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\\u6587\\u6863\\u9879\\u76ee\",\"col\":3}},{\"id\":\"doc-version-shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\\u6587\\u6863\\u7248\\u672c\",\"col\":3}},{\"id\":\"doc-page-shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\\u6587\\u6863\\u9875\\u9762\",\"col\":3}},{\"id\":\"doc-spacer\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"doc-card\",\"type\":\"card\",\"data\":{\"card_name\":\"\\u6587\\u6863\\u7ba1\\u7406\",\"col\":4}}]",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "file-text",
+ "idx": 0,
+ "indicator_color": "blue",
+ "is_hidden": 0,
+ "label": "Doc",
+ "link_type": "DocType",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "\u6587\u6863\u7ba1\u7406",
+   "link_count": 3,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "\u6587\u6863\u9879\u76ee",
+   "link_count": 0,
+   "link_to": "DOC0010",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "\u6587\u6863\u7248\u672c",
+   "link_count": 0,
+   "link_to": "DOC0020",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "\u6587\u6863\u9875\u9762",
+   "link_count": 0,
+   "link_to": "DOC0030",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "module": "Doc",
+ "name": "Doc",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 1.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "\u6587\u6863\u9879\u76ee",
+   "link_to": "DOC0010",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "\u6587\u6863\u7248\u672c",
+   "link_to": "DOC0020",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "\u6587\u6863\u9875\u9762",
+   "link_to": "DOC0030",
+   "stats_filter": "[]",
+   "type": "DocType"
+  }
+ ],
+ "title": "\u6587\u6863",
+ "type": "Workspace"
+}

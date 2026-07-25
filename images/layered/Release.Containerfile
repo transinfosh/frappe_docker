@@ -10,11 +10,18 @@ ARG CACHE_BUST=""
 USER frappe
 
 RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1000 \
+  --mount=type=secret,id=current_repo_token,required=false,uid=1000,gid=1000 \
   --mount=type=secret,id=source_token,required=false,uid=1000,gid=1000 \
   : "${CACHE_BUST}" && \
-  token="$(cat /run/secrets/source_token 2>/dev/null || true)" && \
+  source_token="$(cat /run/secrets/source_token 2>/dev/null || true)" && \
+  current_repo_token="$(cat /run/secrets/current_repo_token 2>/dev/null || true)" && \
+  token="${source_token:-${current_repo_token}}" && \
   if [ -n "${token}" ]; then \
-    python3 -c 'import json; print("\n".join(app["url"] for app in json.load(open("/opt/frappe/apps.json"))))' | \
+    if [ -n "${source_token}" ]; then \
+      python3 -c 'import json; print("\n".join(app["url"] for app in json.load(open("/opt/frappe/apps.json"))))'; \
+    else \
+      python3 -c 'import json; print(json.load(open("/opt/frappe/apps.json"))[0]["url"])'; \
+    fi | \
       while IFS= read -r app_url; do \
         case "${app_url}" in \
           https://github.com/*) \

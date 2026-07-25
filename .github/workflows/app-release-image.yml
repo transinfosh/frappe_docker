@@ -109,12 +109,16 @@ jobs:
       - name: Select source token
         id: token
         env:
+          CURRENT_REPO_TOKEN: ${{ github.token }}
+          CURRENT_TOKEN_FILE: ${{ runner.temp }}/current-repo-token
           OPTIONAL_SOURCE_TOKEN: ${{ secrets.APP_SOURCE_TOKEN }}
-          TOKEN_FILE: ${{ runner.temp }}/source-token
+          SOURCE_TOKEN_FILE: ${{ runner.temp }}/source-token
         run: |
-          printf '%s' "$OPTIONAL_SOURCE_TOKEN" > "$TOKEN_FILE"
-          chmod 600 "$TOKEN_FILE"
-          echo "file=$TOKEN_FILE" >> "$GITHUB_OUTPUT"
+          printf '%s' "$CURRENT_REPO_TOKEN" > "$CURRENT_TOKEN_FILE"
+          printf '%s' "$OPTIONAL_SOURCE_TOKEN" > "$SOURCE_TOKEN_FILE"
+          chmod 600 "$CURRENT_TOKEN_FILE" "$SOURCE_TOKEN_FILE"
+          echo "current_file=$CURRENT_TOKEN_FILE" >> "$GITHUB_OUTPUT"
+          echo "source_file=$SOURCE_TOKEN_FILE" >> "$GITHUB_OUTPUT"
 
       - name: Prepare release metadata
         id: release
@@ -175,7 +179,8 @@ jobs:
           platforms: linux/amd64
           secret-files: |
             apps_json=${{ env.APPS_JSON_PATH }}
-            source_token=${{ steps.token.outputs.file }}
+            current_repo_token=${{ steps.token.outputs.current_file }}
+            source_token=${{ steps.token.outputs.source_file }}
           tags: ${{ env.TEST_IMAGE }}
 
       - name: Smoke test image contents
@@ -261,5 +266,6 @@ jobs:
           push: true
           secret-files: |
             apps_json=${{ env.APPS_JSON_PATH }}
-            source_token=${{ steps.token.outputs.file }}
+            current_repo_token=${{ steps.token.outputs.current_file }}
+            source_token=${{ steps.token.outputs.source_file }}
           tags: ${{ steps.image.outputs.tags }}

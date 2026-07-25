@@ -14,7 +14,17 @@ RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1
   : "${CACHE_BUST}" && \
   token="$(cat /run/secrets/source_token 2>/dev/null || true)" && \
   if [ -n "${token}" ]; then \
-    git config --global url."https://x-access-token:${token}@github.com/".insteadOf "https://github.com/"; \
+    python3 -c 'import json; print("\n".join(app["url"] for app in json.load(open("/opt/frappe/apps.json"))))' | \
+      while IFS= read -r app_url; do \
+        case "${app_url}" in \
+          https://github.com/*) \
+            repo_path="${app_url#https://github.com/}"; \
+            git config --global \
+              url."https://x-access-token:${token}@github.com/${repo_path}".insteadOf \
+              "${app_url}"; \
+            ;; \
+        esac; \
+      done; \
   fi && \
   export APP_INSTALL_ARGS="" && \
   if [ -s /opt/frappe/apps.json ]; then \

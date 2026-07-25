@@ -4,6 +4,31 @@ title: GitHub Actions Image Workflows
 
 This document describes the current workflow setup for shared core images and reusable downstream app images.
 
+## TransInfoSH 应用发布补充
+
+本 fork 在 `.github/workflows/app-release-image.yml` 提供统一的应用镜像发布流程。应用仓库只需保留一个精简调用工作流，并在推送现有的 `v*` 标签或手动选择现有标签时调用它。
+
+与通用的 `app-build-image.yml` 相比，发布流程额外提供：
+
+- 校验 Git 标签与应用 `__version__` 一致，不在发布时反向修改源码或自动创建标签；
+- 使用 `images/layered/Release.Containerfile` 和 GitHub Actions 构建缓存；
+- 用提交 SHA 锁定附加应用，即使附加应用仍使用长期分支，也能阻止分支移动后的非确定性重建；
+- 先构建单平台测试镜像，检查应用目录、`bench version`，并可创建 PostgreSQL 临时站点执行安装和迁移；
+- 发布版本号、源码 SHA 和稳定版 `latest` 三类标签，并写入 OCI 源码、版本和提交标签；
+- 在构建层清理 `node_modules`、Python 字节码和 Git 元数据，减少运行镜像体积；
+- 通过 BuildKit secret 传递私有源码令牌，令牌不会写入 `apps.json` 或最终镜像。
+
+调用方应使用完整提交 SHA 固定 `transinfosh/frappe_docker` 的工作流版本，并将同一个 SHA 传给 `builder_ref`。附加应用使用如下格式：
+
+```yaml
+extra_apps_json: >-
+  [{"url":"https://github.com/transinfosh/base.git",
+    "branch":"develop",
+    "commit":"完整的 40 位提交 SHA"}]
+```
+
+当附加应用分支发生变化时，旧版本重跑会停止，而不是静默构建不同内容。发布新版本前，应审查依赖变更并更新调用工作流中的锁定提交。
+
 # Workflow roles
 
 The current workflow layout is:

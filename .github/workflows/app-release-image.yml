@@ -1,0 +1,271 @@
+name: App / Release Image
+
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        description: "Frappe 应用模块名"
+        required: true
+        type: string
+      app_repo:
+        description: "应用仓库 GitHub slug 或 URL"
+        required: true
+        type: string
+      release_tag:
+        description: "已存在的发布标签，例如 v1.2.3"
+        required: true
+        type: string
+      version_file:
+        description: "包含 __version__ 的文件"
+        required: true
+        type: string
+      image_name:
+        description: "完整镜像名，例如 ghcr.io/transinfosh/quality"
+        required: true
+        type: string
+      builder_ref:
+        description: "包含本工作流和 Containerfile 的固定提交 SHA"
+        required: true
+        type: string
+      extra_apps_json:
+        description: "附加应用及分支锁定提交的 JSON 数组"
+        required: false
+        default: "[]"
+        type: string
+      smoke_test_apps:
+        description: "需要检查的应用目录，以空格分隔"
+        required: false
+        default: ""
+        type: string
+      site_test_apps:
+        description: "需要在临时站点安装的应用，以空格分隔"
+        required: false
+        default: ""
+        type: string
+      runtime_apt_packages:
+        description: "运行镜像额外安装的 apt 软件包，以空格分隔"
+        required: false
+        default: ""
+        type: string
+      frappe_ref:
+        description: "Frappe 基础镜像和源码分支"
+        required: false
+        default: version-16
+        type: string
+      frappe_repo:
+        description: "Frappe 源码仓库"
+        required: false
+        default: https://github.com/transinfosh/frappe.git
+        type: string
+      frappe_image_prefix:
+        description: "Frappe 基础镜像前缀"
+        required: false
+        default: frappe
+        type: string
+      platforms:
+        description: "发布平台"
+        required: false
+        default: linux/amd64
+        type: string
+    secrets:
+      APP_SOURCE_TOKEN:
+        description: "读取私有应用源码的令牌；为空时使用 GITHUB_TOKEN"
+        required: false
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: release-image-${{ github.repository }}-${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      APPS_JSON_PATH: builder/.github/tmp/apps.json
+      BUILDER_DIR: builder
+      SOURCE_DIR: app-source
+      TEST_IMAGE: local/${{ inputs.app_name }}:${{ github.run_id }}-${{ github.run_attempt }}
+
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.app_repo }}
+          ref: ${{ inputs.release_tag }}
+          fetch-depth: 0
+          path: ${{ env.SOURCE_DIR }}
+
+      - name: Checkout image builder
+        uses: actions/checkout@v4
+        with:
+          repository: transinfosh/frappe_docker
+          ref: ${{ inputs.builder_ref }}
+          path: ${{ env.BUILDER_DIR }}
+
+      - name: Select source token
+        id: token
+        env:
+          OPTIONAL_SOURCE_TOKEN: ${{ secrets.APP_SOURCE_TOKEN }}
+          DEFAULT_SOURCE_TOKEN: ${{ github.token }}
+          TOKEN_FILE: ${{ runner.temp }}/source-token
+        run: |
+          if [ -n "$OPTIONAL_SOURCE_TOKEN" ]; then
+            source_token="$OPTIONAL_SOURCE_TOKEN"
+          else
+            source_token="$DEFAULT_SOURCE_TOKEN"
+          fi
+          printf '%s' "$source_token" > "$TOKEN_FILE"
+          chmod 600 "$TOKEN_FILE"
+          echo "file=$TOKEN_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare release metadata
+        id: release
+        env:
+          APP_REPO: ${{ inputs.app_repo }}
+          EXTRA_APPS_JSON: ${{ inputs.extra_apps_json }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          SOURCE_TOKEN: ${{ secrets.APP_SOURCE_TOKEN || github.token }}
+          VERSION_FILE: ${{ inputs.version_file }}
+        run: |
+          source_sha="$(git -C "$SOURCE_DIR" rev-parse HEAD)"
+          python3 "$BUILDER_DIR/resources/release/prepare_release.py" \
+            --app-repo "$APP_REPO" \
+            --release-tag "$RELEASE_TAG" \
+            --version-file "$SOURCE_DIR/$VERSION_FILE" \
+            --source-sha "$source_sha" \
+            --extra-apps-json "$EXTRA_APPS_JSON" \
+            --apps-json "$APPS_JSON_PATH" \
+            --github-output "$GITHUB_OUTPUT" \
+            --source-token "$SOURCE_TOKEN"
+
+      - name: Set image tags
+        id: image
+        env:
+          IMAGE_NAME: ${{ inputs.image_name }}
+          SHORT_SHA: ${{ steps.release.outputs.short_sha }}
+          STABLE: ${{ steps.release.outputs.stable }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          image_name="$(printf '%s' "$IMAGE_NAME" | tr '[:upper:]' '[:lower:]')"
+          {
+            echo "tags<<EOF"
+            echo "$image_name:$VERSION"
+            echo "$image_name:sha-$SHORT_SHA"
+            if [ "$STABLE" = "true" ]; then
+              echo "$image_name:latest"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build smoke-test image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.BUILDER_DIR }}
+          file: ${{ env.BUILDER_DIR }}/images/layered/Release.Containerfile
+          build-args: |
+            CACHE_BUST=${{ steps.release.outputs.cache_bust }}
+            FRAPPE_BRANCH=${{ inputs.frappe_ref }}
+            FRAPPE_IMAGE_PREFIX=${{ inputs.frappe_image_prefix }}
+            FRAPPE_PATH=${{ inputs.frappe_repo }}
+            RUNTIME_APT_PACKAGES=${{ inputs.runtime_apt_packages }}
+          cache-from: type=gha,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
+          cache-to: type=gha,mode=max,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
+          load: true
+          platforms: linux/amd64
+          secrets: |
+            apps_json=${{ env.APPS_JSON_PATH }}
+            source_token=${{ steps.token.outputs.file }}
+          tags: ${{ env.TEST_IMAGE }}
+
+      - name: Smoke test image contents
+        env:
+          APP_NAME: ${{ inputs.app_name }}
+          SMOKE_TEST_APPS: ${{ inputs.smoke_test_apps }}
+        run: |
+          apps="$APP_NAME $SMOKE_TEST_APPS"
+          for app in $apps; do
+            docker run --rm --entrypoint test "$TEST_IMAGE" \
+              -d "/home/frappe/frappe-bench/apps/$app"
+          done
+          docker run --rm --entrypoint bench "$TEST_IMAGE" version
+
+      - name: Smoke test site installation
+        if: ${{ inputs.site_test_apps != '' }}
+        env:
+          SITE_TEST_APPS: ${{ inputs.site_test_apps }}
+        run: |
+          network="release-test-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          database="release-postgres-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          cleanup() {
+            docker rm -f "$database" >/dev/null 2>&1 || true
+            docker network rm "$network" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          docker network create "$network"
+          docker run -d --name "$database" --network "$network" \
+            -e POSTGRES_PASSWORD=frappe \
+            postgres:16-alpine
+
+          for attempt in $(seq 1 30); do
+            if docker exec "$database" pg_isready -U postgres >/dev/null 2>&1; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              echo "PostgreSQL did not become ready"
+              exit 1
+            fi
+            sleep 2
+          done
+
+          install_args=""
+          for app in $SITE_TEST_APPS; do
+            install_args="$install_args --install-app $app"
+          done
+          docker run --rm --network "$network" --entrypoint bash "$TEST_IMAGE" -lc \
+            "bench new-site release.test \
+              --db-type postgres \
+              --db-host $database \
+              --db-root-username postgres \
+              --db-root-password frappe \
+              --admin-password frappe \
+              $install_args && \
+             bench --site release.test migrate"
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Push release image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.BUILDER_DIR }}
+          file: ${{ env.BUILDER_DIR }}/images/layered/Release.Containerfile
+          build-args: |
+            CACHE_BUST=${{ steps.release.outputs.cache_bust }}
+            FRAPPE_BRANCH=${{ inputs.frappe_ref }}
+            FRAPPE_IMAGE_PREFIX=${{ inputs.frappe_image_prefix }}
+            FRAPPE_PATH=${{ inputs.frappe_repo }}
+            RUNTIME_APT_PACKAGES=${{ inputs.runtime_apt_packages }}
+          cache-from: type=gha,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
+          cache-to: type=gha,mode=max,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
+          labels: |
+            org.opencontainers.image.revision=${{ steps.release.outputs.source_sha }}
+            org.opencontainers.image.source=https://github.com/${{ inputs.app_repo }}
+            org.opencontainers.image.version=${{ steps.release.outputs.version }}
+          platforms: ${{ inputs.platforms }}
+          push: true
+          secrets: |
+            apps_json=${{ env.APPS_JSON_PATH }}
+            source_token=${{ steps.token.outputs.file }}
+          tags: ${{ steps.image.outputs.tags }}

@@ -1,3 +1,7 @@
+---
+title: Environment Variables
+---
+
 # Environment Variables Reference
 
 Environment variables configure your Frappe Docker setup. They can be set directly in the container or defined in a `.env` file referenced by Docker Compose.
@@ -118,6 +122,16 @@ If your site is named `example.com` and you access it via that domain, no need t
 
 ---
 
+## Backend (Gunicorn) Configuration
+
+| Variable           | Purpose                                                        | Default | When to Set / Allowed Values                                                     |
+| :----------------- | :------------------------------------------------------------- | :------ | :------------------------------------------------------------------------------- |
+| `GUNICORN_WORKERS` | Number of worker processes handling web requests               | `2`     | Scale up for multi-core CPUs. Formula: `(2 x Cores) + 1`                         |
+| `GUNICORN_THREADS` | Number of concurrent threads per worker process                | `4`     | Increase to handle more simultaneous I/O-bound requests without high memory cost |
+| `GUNICORN_TIMEOUT` | Max time a worker can spend on a single request before restart | `120`   | Increase if long-running reports or data imports time out                        |
+
+---
+
 ## Frontend Nginx Configuration (inside the frontend container)
 
 | Variable               | Purpose                            | Default        | Allowed Values                               |
@@ -136,3 +150,11 @@ Use these variables when running behind a reverse proxy or load balancer:
 | `UPSTREAM_REAL_IP_ADDRESS`   | Trusted upstream IP address for real IP detection | `127.0.0.1`       |
 | `UPSTREAM_REAL_IP_HEADER`    | Request header containing client IP               | `X-Forwarded-For` |
 | `UPSTREAM_REAL_IP_RECURSIVE` | Enable recursive IP search                        | `off`             |
+
+---
+
+## Migration Service
+
+| Variable        | Purpose                         | Default                    | Allowed Values   |
+| --------------- | ------------------------------- | -------------------------- | ---------------- |
+| `MIGRATE_SITES` | Switch auto migration on or off | `true` - auto migration on | `true` , `false` |

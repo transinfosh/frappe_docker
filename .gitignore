@@ -29,3 +29,7 @@ venv
 # NodeJS
 node_modules
 .pnpm-store
+
+# VitePress
+**/.vitepress/dist
+**/.vitepress/cache

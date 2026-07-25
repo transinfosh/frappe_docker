@@ -173,7 +173,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           load: true
           platforms: linux/amd64
-          secrets: |
+          secret-files: |
             apps_json=${{ env.APPS_JSON_PATH }}
             source_token=${{ steps.token.outputs.file }}
           tags: ${{ env.TEST_IMAGE }}
@@ -259,7 +259,7 @@ jobs:
             org.opencontainers.image.version=${{ steps.release.outputs.version }}
           platforms: ${{ inputs.platforms }}
           push: true
-          secrets: |
+          secret-files: |
             apps_json=${{ env.APPS_JSON_PATH }}
             source_token=${{ steps.token.outputs.file }}
           tags: ${{ steps.image.outputs.tags }}

@@ -92,7 +92,7 @@ jobs:
 
     steps:
       - name: Checkout release source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.app_repo }}
           ref: ${{ inputs.release_tag }}
@@ -100,7 +100,7 @@ jobs:
           path: ${{ env.SOURCE_DIR }}
 
       - name: Checkout image builder
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: transinfosh/frappe_docker
           ref: ${{ inputs.builder_ref }}
@@ -110,15 +110,9 @@ jobs:
         id: token
         env:
           OPTIONAL_SOURCE_TOKEN: ${{ secrets.APP_SOURCE_TOKEN }}
-          DEFAULT_SOURCE_TOKEN: ${{ github.token }}
           TOKEN_FILE: ${{ runner.temp }}/source-token
         run: |
-          if [ -n "$OPTIONAL_SOURCE_TOKEN" ]; then
-            source_token="$OPTIONAL_SOURCE_TOKEN"
-          else
-            source_token="$DEFAULT_SOURCE_TOKEN"
-          fi
-          printf '%s' "$source_token" > "$TOKEN_FILE"
+          printf '%s' "$OPTIONAL_SOURCE_TOKEN" > "$TOKEN_FILE"
           chmod 600 "$TOKEN_FILE"
           echo "file=$TOKEN_FILE" >> "$GITHUB_OUTPUT"
 
@@ -128,7 +122,7 @@ jobs:
           APP_REPO: ${{ inputs.app_repo }}
           EXTRA_APPS_JSON: ${{ inputs.extra_apps_json }}
           RELEASE_TAG: ${{ inputs.release_tag }}
-          SOURCE_TOKEN: ${{ secrets.APP_SOURCE_TOKEN || github.token }}
+          SOURCE_TOKEN: ${{ secrets.APP_SOURCE_TOKEN }}
           VERSION_FILE: ${{ inputs.version_file }}
         run: |
           source_sha="$(git -C "$SOURCE_DIR" rev-parse HEAD)"
@@ -162,10 +156,10 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build smoke-test image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ${{ env.BUILDER_DIR }}
           file: ${{ env.BUILDER_DIR }}/images/layered/Release.Containerfile
@@ -240,14 +234,14 @@ jobs:
              bench --site release.test migrate"
 
       - name: Login to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
       - name: Push release image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ${{ env.BUILDER_DIR }}
           file: ${{ env.BUILDER_DIR }}/images/layered/Release.Containerfile

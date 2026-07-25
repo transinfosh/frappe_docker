@@ -110,8 +110,9 @@ def get_args_parser():
         "--db-type",
         action="store",
         type=str,
-        help="Database type to use (e.g., mariadb or postgres)",
-        default="mariadb",  # Set your default database type here
+        choices=("mariadb", "postgres"),
+        help="Database type to use, default: postgres",
+        default="postgres",
     )
     return parser
 

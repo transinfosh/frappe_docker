@@ -331,8 +331,8 @@ options:
   -v, --verbose         verbose output
   -a ADMIN_PASSWORD, --admin-password ADMIN_PASSWORD
                         admin password for site, default: admin
-  -d DB_TYPE, --db-type DB_TYPE
-                        Database type to use (e.g., mariadb or postgres)
+  -d, --db-type {mariadb,postgres}
+                        Database type to use, default: postgres
 ```
 
 A new bench and / or site is created for the client with following defaults.
@@ -344,10 +344,10 @@ A new bench and / or site is created for the client with following defaults.
 
 <!-- transinfosh:start -->
 
-::: warning TransInfoSH 定制
-虽然 `installer.py --help` 中的 `--db-type` 默认值仍是 `mariadb`，本 fork 的
-Compose 默认只启用 PostgreSQL。使用默认开发容器时必须显式传入
-`--db-type postgres`；否则安装器会尝试连接未启动的 `mariadb` 服务。
+::: info TransInfoSH 定制
+本 fork 的安装器和 Compose 都默认使用 PostgreSQL，因此使用默认开发容器时可以
+省略 `--db-type postgres`。如需使用 MariaDB，请先在 Compose 中启用 MariaDB
+服务并显式传入 `--db-type mariadb`。
 :::
 
 <!-- transinfosh:end -->

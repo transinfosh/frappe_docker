@@ -59,8 +59,9 @@ MariaDB 配置保留在 Compose 文件中但默认注释。PostgreSQL 18 的数�
 连接参数。
 
 开发容器还会安装 OpenSSH Server 和 GitHub CLI，并把宿主机
-`127.0.0.1:2222` 映射到容器的 SSH 端口。重建容器前，请确保挂载进容器的
-`~/.ssh/authorized_keys` 已存在；SSH 只允许密钥登录。
+`127.0.0.1:2222` 映射到容器的 SSH 端口。存在
+`~/.ssh/authorized_keys` 时，SSH 会以仅允许密钥登录的方式启动；文件不存在时
+会跳过 SSH 配置和启动，不影响通过 VS Code 使用开发容器。
 :::
 
 <!-- transinfosh:end -->

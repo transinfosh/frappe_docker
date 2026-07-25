@@ -202,8 +202,10 @@ jobs:
         run: |
           network="release-test-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           database="release-postgres-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          redis="release-redis-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           cleanup() {
             docker rm -f "$database" >/dev/null 2>&1 || true
+            docker rm -f "$redis" >/dev/null 2>&1 || true
             docker network rm "$network" >/dev/null 2>&1 || true
           }
           trap cleanup EXIT
@@ -212,13 +214,15 @@ jobs:
           docker run -d --name "$database" --network "$network" \
             -e POSTGRES_PASSWORD=frappe \
             postgres:16-alpine
+          docker run -d --name "$redis" --network "$network" redis:7-alpine
 
           for attempt in $(seq 1 30); do
-            if docker exec "$database" pg_isready -U postgres >/dev/null 2>&1; then
+            if docker exec "$database" pg_isready -U postgres >/dev/null 2>&1 && \
+              docker exec "$redis" redis-cli ping >/dev/null 2>&1; then
               break
             fi
             if [ "$attempt" -eq 30 ]; then
-              echo "PostgreSQL did not become ready"
+              echo "PostgreSQL or Redis did not become ready"
               exit 1
             fi
             sleep 2
@@ -229,7 +233,10 @@ jobs:
             install_args="$install_args --install-app $app"
           done
           docker run --rm --network "$network" --entrypoint bash "$TEST_IMAGE" -lc \
-            "bench new-site release.test \
+            "bench set-config -g redis_cache redis://$redis:6379 && \
+             bench set-config -g redis_queue redis://$redis:6379 && \
+             bench set-config -g redis_socketio redis://$redis:6379 && \
+             bench new-site release.test \
               --db-type postgres \
               --db-host $database \
               --db-root-username postgres \

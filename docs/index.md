@@ -24,3 +24,12 @@ features:
   - title: Production Ready
     details: Deploy production applications with ease
 ---
+
+<!-- transinfosh:start -->
+
+::: info TransInfoSH 定制
+本站保留官方文档结构，并在相关章节内直接标出本 fork 的实际差异。请从
+[TransInfoSH 定制索引](/08-reference/08-transinfosh-customizations) 查看所有定制入口。
+:::
+
+<!-- transinfosh:end -->

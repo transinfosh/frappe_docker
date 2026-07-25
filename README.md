@@ -15,6 +15,16 @@
   </p>
 </div>
 
+<!-- transinfosh:start -->
+
+> [!IMPORTANT] > **TransInfoSH 定制版**
+>
+> 本仓库基于官方 `frappe/frappe_docker` 持续同步，并在原文档中直接标注本 fork
+> 的差异。被替换的官方行为使用删除线表示，紧随其后的内容是当前可用配置。
+> 请先阅读 [TransInfoSH 定制索引](docs/08-reference/08-transinfosh-customizations.md)。
+
+<!-- transinfosh:end -->
+
 ## What is this?
 
 This repository is the official container setup for Frappe applications.
@@ -54,7 +64,7 @@ frappe_docker/
 
 ## Documentation
 
-The full `frappe_docker` documentation is available in [`docs/`](docs/) and published at [frappe.github.io/frappe_docker](https://frappe.github.io/frappe_docker/).
+The full `frappe_docker` documentation is available in [`docs/`](docs/) and published at [transinfosh.github.io/frappe_docker](https://transinfosh.github.io/frappe_docker/).
 
 ### Recommended entry points:
 

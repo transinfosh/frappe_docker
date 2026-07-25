@@ -59,6 +59,18 @@ resources/                    # Core templates
 
 ## Keeping Fork Updated
 
+<!-- transinfosh:start -->
+
+::: info TransInfoSH 定制
+官方本节给出的同步流程本来就是合并上游后直接推送 fork，不要求每次创建 Pull
+Request。`transinfosh/frappe_docker` 沿用这个方式：先在独立 worktree 或干净
+分支中合并并验证，再直接更新 `main`。只有出现复杂冲突、基础运行时大版本变更或
+需要评审时，才临时使用 Pull Request。不得把
+`development/frappe-bench/apps/` 中的应用源码带入同步提交。
+:::
+
+<!-- transinfosh:end -->
+
 ```bash
 # Regularly sync with upstream (weekly recommended)
 git checkout main
@@ -76,6 +88,21 @@ git rebase main  # Or: git merge main
 # 3. git rebase --continue
 # Or: git rebase --abort  (to cancel)
 ```
+
+<!-- transinfosh:start -->
+
+对于 TransInfoSH fork，推送前还应确认远端没有新提交，并只做快进更新：
+
+```bash
+git fetch origin
+git fetch upstream
+git merge upstream/main
+git push origin main
+```
+
+若 `origin/main` 已变化，应先重新获取并整合，不要使用强制推送覆盖远端。
+
+<!-- transinfosh:end -->
 
 ## Custom Environment Pattern
 

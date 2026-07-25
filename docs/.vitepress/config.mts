@@ -13,7 +13,10 @@ const vitePressOptions: UserConfig = {
     nav: [{ text: "Home", link: "/" }],
 
     socialLinks: [
-      { icon: "github", link: "https://github.com/frappe/frappe_docker/" },
+      {
+        icon: "github",
+        link: "https://github.com/transinfosh/frappe_docker/",
+      },
     ],
   },
 };

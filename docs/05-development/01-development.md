@@ -47,8 +47,23 @@ cp -R development/vscode-example development/.vscode
 
 For most people getting started with Frappe development, the best solution is to use [VSCode Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
 
-Before opening the folder in container, determine the database that you want to use. The default is MariaDB.
-If you want to use PostgreSQL instead, edit `.devcontainer/docker-compose.yml` and uncomment the section for `postgresql` service, and you may also want to comment `mariadb` as well.
+~~Before opening the folder in container, determine the database that you want to use. The default is MariaDB.
+If you want to use PostgreSQL instead, edit `.devcontainer/docker-compose.yml` and uncomment the section for `postgresql` service, and you may also want to comment `mariadb` as well.~~
+
+<!-- transinfosh:start -->
+
+::: info TransInfoSH 定制
+本 fork 默认启用 `postgres:18-bookworm`，服务名为 `postgresql`，密码为 `123`；
+MariaDB 配置保留在 Compose 文件中但默认注释。PostgreSQL 18 的数据卷挂载到
+`/var/lib/postgresql`。如需改回 MariaDB，请同时切换服务、数据卷和下文的数据库
+连接参数。
+
+开发容器还会安装 OpenSSH Server、GitHub CLI 和 Codex CLI，并把宿主机
+`127.0.0.1:2222` 映射到容器的 SSH 端口。重建容器前，请确保挂载进容器的
+`~/.ssh/authorized_keys` 已存在；SSH 只允许密钥登录。
+:::
+
+<!-- transinfosh:end -->
 
 VSCode should automatically inquire you to install the required extensions, that can also be installed manually as follows:
 
@@ -126,7 +141,8 @@ development/
 We need to tell bench to use the right containers instead of localhost. Run the following commands inside the container:
 
 ```shell
-bench set-config -g db_host mariadb
+bench set-config -g db_host postgresql
+bench set-config -g db_type postgres
 bench set-config -g redis_cache redis://redis-cache:6379
 bench set-config -g redis_queue redis://redis-queue:6379
 bench set-config -g redis_socketio redis://redis-queue:6379
@@ -136,7 +152,8 @@ For any reason the above commands fail, set the values in `common_site_config.js
 
 ```json
 {
-  "db_host": "mariadb",
+  "db_host": "postgresql",
+  "db_type": "postgres",
   "redis_cache": "redis://redis-cache:6379",
   "redis_queue": "redis://redis-queue:6379",
   "redis_socketio": "redis://redis-queue:6379"
@@ -269,12 +286,24 @@ Most developers work with numerous clients and versions. Moreover, apps may be r
 
 This is simplified using a script to automate the process of creating a new bench / site and installing the required apps. The `Administrator` password for created sites is `admin`.
 
-Sample `apps-example.json` is used by default, it installs erpnext on current stable release. To install custom apps, copy the `apps-example.json` to custom json file and make changes to list of apps. Pass this file to the `installer.py` script.
+~~Sample `apps-example.json` is used by default, it installs erpnext on current stable release.~~
+To install custom apps, copy the `apps-example.json` to custom json file and make changes to list of apps. Pass this file to the `installer.py` script.
+
+<!-- transinfosh:start -->
+
+::: info TransInfoSH 定制
+本 fork 的 `apps-example.json` 默认为空数组 `[]`，不会隐式安装 ERPNext 或任何
+业务应用。请为目标环境准备自己的 JSON 文件，并使用 `--apps-json` 显式传入。
+每个业务应用由独立 Git 仓库管理，详见
+[自定义应用](/09-concepts/01-custom-app#transinfosh-应用仓库约定)。
+:::
+
+<!-- transinfosh:end -->
 
 > You may have apps in private repos which may require ssh access. You may use SSH from your home directory on linux (configurable in docker-compose.yml).
 
 ```shell
-python installer.py  #pass --db-type postgres for postgresdb
+python installer.py --db-type postgres --apps-json apps-my-project.json
 ```
 
 For command help
@@ -308,10 +337,20 @@ options:
 
 A new bench and / or site is created for the client with following defaults.
 
-- MariaDB root password: `123`
+- PostgreSQL root username: `postgres`
+- PostgreSQL host: `postgresql`
+- PostgreSQL root password: `123`
 - Admin password: `admin`
 
-> To use Postegres DB, comment the mariabdb service and uncomment postegres service.
+<!-- transinfosh:start -->
+
+::: warning TransInfoSH 定制
+虽然 `installer.py --help` 中的 `--db-type` 默认值仍是 `mariadb`，本 fork 的
+Compose 默认只启用 PostgreSQL。使用默认开发容器时必须显式传入
+`--db-type postgres`；否则安装器会尝试连接未启动的 `mariadb` 服务。
+:::
+
+<!-- transinfosh:end -->
 
 ### Start Frappe with Visual Studio Code Python Debugging
 

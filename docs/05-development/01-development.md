@@ -58,7 +58,7 @@ MariaDB 配置保留在 Compose 文件中但默认注释。PostgreSQL 18 的数�
 `/var/lib/postgresql`。如需改回 MariaDB，请同时切换服务、数据卷和下文的数据库
 连接参数。
 
-开发容器还会安装 OpenSSH Server、GitHub CLI 和 Codex CLI，并把宿主机
+开发容器还会安装 OpenSSH Server 和 GitHub CLI，并把宿主机
 `127.0.0.1:2222` 映射到容器的 SSH 端口。重建容器前，请确保挂载进容器的
 `~/.ssh/authorized_keys` 已存在；SSH 只允许密钥登录。
 :::

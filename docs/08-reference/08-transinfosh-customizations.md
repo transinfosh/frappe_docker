@@ -19,7 +19,7 @@ title: TransInfoSH 定制索引
 ## 当前定制
 
 - [开发环境](/05-development/01-development)：默认 PostgreSQL 18、SSH
-  访问、GitHub CLI、Codex CLI、空应用清单和安装器参数。
+  访问、GitHub CLI、空应用清单和安装器参数。
 - [调试](/05-development/02-debugging)：Bench 虚拟环境 Python、Ruff
   保存时格式化及开发扩展。
 - [自定义应用](/09-concepts/01-custom-app#transinfosh-应用仓库约定)：业务应用

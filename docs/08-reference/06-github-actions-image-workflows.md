@@ -18,6 +18,10 @@ This document describes the current workflow setup for shared core images and re
 - 在构建层清理 `node_modules`、Python 字节码和 Git 元数据，减少运行镜像体积；
 - 通过 BuildKit secret 传递私有源码令牌，令牌不会写入 `apps.json` 或最终镜像。
 
+提供 `APP_SOURCE_TOKEN` 时，构建器会为 `apps.json` 中应用所属的 GitHub
+组织配置临时认证。因此，应用的包管理器可以从同一组织下的其他私有仓库安装锁定
+到 Tag 或提交的 Git 依赖。认证配置只存在于构建步骤中，并会在复制到运行镜像前删除。
+
 调用方应使用完整提交 SHA 固定 `transinfosh/frappe_docker` 的工作流版本，并将同一个 SHA 传给 `builder_ref`。附加应用使用如下格式：
 
 ```yaml

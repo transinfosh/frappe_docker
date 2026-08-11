@@ -26,6 +26,10 @@ RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1
         case "${app_url}" in \
           https://github.com/*) \
             repo_path="${app_url#https://github.com/}"; \
+            if [ -n "${source_token}" ]; then \
+              repo_path="${repo_path%%/*}/"; \
+              app_url="https://github.com/${repo_path}"; \
+            fi; \
             git config --global \
               url."https://x-access-token:${token}@github.com/${repo_path}".insteadOf \
               "${app_url}"; \

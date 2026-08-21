@@ -7,6 +7,10 @@ on:
         description: "不可变基础镜像标签"
         required: true
         type: string
+      builder_ref:
+        description: "包含基础镜像工作流和 Containerfile 的固定提交 SHA"
+        required: true
+        type: string
       framework_apps_json:
         description: "框架扩展应用及其分支、提交的 JSON 数组"
         required: true
@@ -33,6 +37,10 @@ on:
     inputs:
       image_tag:
         description: "不可变基础镜像标签"
+        required: true
+        type: string
+      builder_ref:
+        description: "包含基础镜像工作流和 Containerfile 的固定提交 SHA"
         required: true
         type: string
       framework_apps_json:
@@ -64,12 +72,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      APPS_JSON_PATH: .github/tmp/framework-apps.json
+      APPS_JSON_PATH: builder/.github/tmp/framework-apps.json
+      BUILDER_DIR: builder
       IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/frappe-framework
 
     steps:
       - name: Checkout image builder
         uses: actions/checkout@v7
+        with:
+          repository: transinfosh/frappe_docker
+          ref: ${{ inputs.builder_ref }}
+          path: ${{ env.BUILDER_DIR }}
 
       - name: Prepare source token
         env:
@@ -85,7 +98,7 @@ jobs:
           FRAMEWORK_APPS_JSON: ${{ inputs.framework_apps_json }}
           SOURCE_TOKEN: ${{ secrets.APP_SOURCE_TOKEN }}
         run: |
-          python3 resources/release/prepare_framework_base.py \
+          python3 "$BUILDER_DIR/resources/release/prepare_framework_base.py" \
             --framework-apps-json "$FRAMEWORK_APPS_JSON" \
             --apps-json "$APPS_JSON_PATH" \
             --github-output "$GITHUB_OUTPUT" \
@@ -103,8 +116,8 @@ jobs:
       - name: Build smoke-test image
         uses: docker/build-push-action@v7
         with:
-          context: .
-          file: images/layered/FrameworkBase.Containerfile
+          context: ${{ env.BUILDER_DIR }}
+          file: ${{ env.BUILDER_DIR }}/images/layered/FrameworkBase.Containerfile
           build-args: |
             CACHE_BUST=${{ steps.prepare.outputs.cache_bust }}
             FRAPPE_BRANCH=${{ inputs.frappe_ref }}
@@ -138,8 +151,8 @@ jobs:
       - name: Push framework image
         uses: docker/build-push-action@v7
         with:
-          context: .
-          file: images/layered/FrameworkBase.Containerfile
+          context: ${{ env.BUILDER_DIR }}
+          file: ${{ env.BUILDER_DIR }}/images/layered/FrameworkBase.Containerfile
           build-args: |
             CACHE_BUST=${{ steps.prepare.outputs.cache_bust }}
             FRAPPE_BRANCH=${{ inputs.frappe_ref }}

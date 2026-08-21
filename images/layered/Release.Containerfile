@@ -53,7 +53,7 @@ RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1
   cd /home/frappe/frappe-bench && \
   echo "{}" > sites/common_site_config.json && \
   find apps -mindepth 1 -path "*/.git" -prune -exec rm -rf {} + && \
-  find apps -mindepth 2 -type d \( -name node_modules -o -name __pycache__ \) -prune -exec rm -rf {} + && \
+  find apps -mindepth 2 -type d -name __pycache__ -prune -exec rm -rf {} + && \
   find apps -type f \( -name "*.pyc" -o -name "*.pyo" \) -delete
 
 FROM ${FRAPPE_IMAGE_PREFIX}/base:${FRAPPE_BRANCH} AS backend

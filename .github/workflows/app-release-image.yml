@@ -174,7 +174,7 @@ jobs:
             FRAPPE_PATH=${{ inputs.frappe_repo }}
             RUNTIME_APT_PACKAGES=${{ inputs.runtime_apt_packages }}
           cache-from: type=gha,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
-          cache-to: type=gha,mode=max,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
+          cache-to: type=gha,mode=min,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           load: true
           platforms: linux/amd64
           secret-files: |
@@ -193,6 +193,8 @@ jobs:
             docker run --rm --entrypoint test "$TEST_IMAGE" \
               -d "/home/frappe/frappe-bench/apps/$app"
           done
+          docker run --rm --entrypoint test "$TEST_IMAGE" \
+            -f "/home/frappe/frappe-bench/apps/frappe/node_modules/ace-builds/src-min-noconflict/ace.js"
           docker run --rm --entrypoint bench "$TEST_IMAGE" version
 
       - name: Smoke test site installation
@@ -264,7 +266,7 @@ jobs:
             FRAPPE_PATH=${{ inputs.frappe_repo }}
             RUNTIME_APT_PACKAGES=${{ inputs.runtime_apt_packages }}
           cache-from: type=gha,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
-          cache-to: type=gha,mode=max,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
+          cache-to: type=gha,mode=min,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           labels: |
             org.opencontainers.image.revision=${{ steps.release.outputs.source_sha }}
             org.opencontainers.image.source=https://github.com/${{ inputs.app_repo }}

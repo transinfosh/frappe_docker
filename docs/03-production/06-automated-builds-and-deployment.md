@@ -145,3 +145,32 @@ This approach is especially useful in CI/CD pipelines where no interactive acces
 to the backend container is available.
 
 See [Compose override](../../overrides/compose.migrator.yaml)
+
+## Deploy a versioned application image
+
+`resources/release/deploy_compose_release.sh` provides a single-host release path for a
+versioned application image. It creates a PostgreSQL custom-format dump with a host
+`pg_dump` client that is at least as new as the database server, archives site files and
+the Compose configuration, validates checksums, runs migrations with the new image, and
+recreates only application services. Redis services are left running during a normal
+application release.
+
+The deployment host must provide Docker Compose, Python, `psql`, `pg_dump`, `flock`, and
+`curl`. The database must be reachable from the host. For example:
+
+```bash
+SITE_NAME=example.com \
+COMPOSE_FILE=/srv/frappe/frappe-compose.yml \
+BACKUP_ROOT=/srv/frappe/backups \
+DB_HOST_OVERRIDE=127.0.0.1 \
+EXPECTED_APP=my_app \
+EXPECTED_VERSION=1.2.4 \
+HEALTH_URL=https://example.com/api/method/ping \
+resources/release/deploy_compose_release.sh \
+  ghcr.io/example/my_app:1.2.3 \
+  ghcr.io/example/my_app:1.2.4
+```
+
+Use immutable version tags or digests for both image arguments. If a database cannot be
+reached from the deployment host, keep using the environment's database-native backup
+mechanism before running the migration override.

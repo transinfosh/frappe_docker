@@ -20,6 +20,7 @@ RUN --mount=type=secret,id=framework_apps_json,target=/opt/frappe/framework-apps
           https://github.com/*) \
             repo_path="${app_url#https://github.com/}"; \
             repo_path="${repo_path%%/*}/"; \
+            app_url="https://github.com/${repo_path}"; \
             git config --global \
               url."https://x-access-token:${source_token}@github.com/${repo_path}".insteadOf \
               "${app_url}"; \

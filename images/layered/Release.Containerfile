@@ -4,6 +4,15 @@ FROM ${FRAMEWORK_IMAGE}
 
 ARG APP_NAME
 ARG CACHE_BUST=""
+ARG RUNTIME_APT_PACKAGES=""
+
+USER root
+
+RUN if [ -n "${RUNTIME_APT_PACKAGES}" ]; then \
+      apt-get update && \
+      apt-get install -y --no-install-recommends ${RUNTIME_APT_PACKAGES} && \
+      rm -rf /var/lib/apt/lists/*; \
+    fi
 
 USER frappe
 

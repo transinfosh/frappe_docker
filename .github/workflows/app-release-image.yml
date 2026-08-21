@@ -182,6 +182,7 @@ jobs:
             APP_NAME=${{ inputs.app_name }}
             CACHE_BUST=${{ steps.release.outputs.cache_bust }}
             FRAMEWORK_IMAGE=${{ inputs.framework_image }}
+            RUNTIME_APT_PACKAGES=${{ inputs.runtime_apt_packages }}
           cache-from: type=gha,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           cache-to: type=gha,mode=min,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           load: true
@@ -265,6 +266,7 @@ jobs:
             APP_NAME=${{ inputs.app_name }}
             CACHE_BUST=${{ steps.release.outputs.cache_bust }}
             FRAMEWORK_IMAGE=${{ inputs.framework_image }}
+            RUNTIME_APT_PACKAGES=${{ inputs.runtime_apt_packages }}
           cache-from: type=gha,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           cache-to: type=gha,mode=min,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           labels: |

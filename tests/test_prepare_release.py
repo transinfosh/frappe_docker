@@ -57,6 +57,22 @@ class PrepareReleaseTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "锁定提交"):
             prepare_release.validate_dependency_locks(apps)
 
+    @patch.object(prepare_release.subprocess, "run")
+    def test_validate_dependency_locks_accepts_a_tag(self, run):
+        commit = "a" * 40
+        run.return_value.stdout = f"{commit}\trefs/tags/v1.2.3\n"
+        apps = [
+            {
+                "url": "https://github.com/transinfosh/base.git",
+                "branch": "v1.2.3",
+                "commit": commit,
+            }
+        ]
+
+        prepare_release.validate_dependency_locks(apps)
+
+        self.assertIn("refs/tags/v1.2.3", run.call_args.args[0])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -79,19 +79,36 @@ def git_auth_environment(token: str) -> dict[str, str]:
 def validate_dependency_locks(apps: list[dict[str, str]], token: str = "") -> None:
     environment = git_auth_environment(token)
     for app in apps:
-        ref = f"refs/heads/{app['branch']}"
         result = subprocess.run(
-            ["git", "ls-remote", app["url"], ref],
+            [
+                "git",
+                "ls-remote",
+                app["url"],
+                f"refs/tags/{app['branch']}^{{}}",
+                f"refs/tags/{app['branch']}",
+                f"refs/heads/{app['branch']}",
+            ],
             check=True,
             capture_output=True,
             text=True,
             env=environment,
         )
-        actual = result.stdout.partition("\t")[0].strip().lower()
+        refs = {
+            ref: sha.lower()
+            for line in result.stdout.splitlines()
+            if (parts := line.split("\t", maxsplit=1)) and len(parts) == 2
+            for sha, ref in [parts]
+        }
+        actual = (
+            refs.get(f"refs/tags/{app['branch']}^{{}}")
+            or refs.get(f"refs/tags/{app['branch']}")
+            or refs.get(f"refs/heads/{app['branch']}")
+            or ""
+        )
         if actual != app["commit"]:
             name = Path(urlparse(app["url"]).path).stem
             raise ValueError(
-                f"{name}:{app['branch']} 当前为 {actual or '不存在'}，"
+                f"{name}:{app['branch']} 对应的 Tag 或分支当前为 {actual or '不存在'}，"
                 f"与锁定提交 {app['commit']} 不一致"
             )
 

@@ -18,6 +18,24 @@ This document describes the current workflow setup for shared core images and re
 - 保留运行所需的 `node_modules`，仅清理 Python 字节码和 Git 元数据，确保 Frappe 的代码编辑器等按需加载资源可用；
 - 通过 BuildKit secret 传递私有源码令牌，令牌不会写入 `apps.json` 或最终镜像。
 
+## 发布版本命名约束
+
+后续所有 TransInfoSH 应用与基础镜像发布必须遵循以下规则：
+
+| 对象          | Git Tag  | Docker 镜像 Tag                                   |
+| ------------- | -------- | ------------------------------------------------- |
+| 业务应用      | `vX.Y.Z` | `X.Y.Z`                                           |
+| `frappe_ext`  | `vX.Y.Z` | 不单独发布运行镜像；基础镜像 Tag 使用 `ext-X.Y.Z` |
+| `tsuite-base` | 不适用   | `version-<Frappe 精确版本>-ext-<frappe_ext 版本>` |
+
+例如，Frappe 为 `16.31.0`、`frappe_ext` 为 `v0.1.0` 时，基础镜像必须为：
+
+```text
+ghcr.io/transinfosh/tsuite-base:version-16.31.0-ext-0.1.0
+```
+
+不要将 Git Tag 的前缀 `v` 带入 Docker 镜像 Tag；Frappe 的 `version-16` 分支名也不能代替精确的 Frappe 版本号。基础镜像构建配置必须锁定 `frappe_ext` 的 Git Tag 和对应 40 位提交 SHA；应用镜像必须固定引用已发布的 `tsuite-base` 版本。
+
 提供 `APP_SOURCE_TOKEN` 时，构建器会为 `apps.json` 中应用所属的 GitHub
 组织配置临时认证。因此，应用的包管理器可以从同一组织下的其他私有仓库安装锁定
 到 Tag 或提交的 Git 依赖。认证配置只存在于构建步骤中，并会在复制到运行镜像前删除。
@@ -37,7 +55,7 @@ extra_apps_json: >-
 
 `Framework Base Image` 工作流会生成不可变的框架镜像，其中包含 Frappe、`frappe_ext` 和已经构建的框架资源。应用发布工作流以该镜像为父层，只获取、安装和构建业务应用；因此业务代码变更不会使 Frappe 与 `frappe_ext` 的大层失效。
 
-基础镜像使用 `Frappe 维护线.扩展子版本` 作为发布版本，例如 `ghcr.io/transinfosh/tsuite-base:version-16.0.1`：`version-16` 对应 Frappe 官方维护线，`.0.1` 是该维护线下的 `frappe_ext` 基础镜像子版本。构建基础镜像时传入的 `framework_apps_json` 与附加应用采用相同的 `url`、`branch` 和 40 位 `commit` 格式：`branch` 可以是 Git Tag 或分支，但框架扩展必须使用发布 Tag。构建会同时校验该 Tag（优先）或分支仍指向所锁定的提交。只有框架版本、框架扩展的发布 Tag 或锁定提交变更时，才需要发布新的 `tsuite-base` 版本，并在调用方更新 `framework_image`。
+基础镜像使用 `version-<Frappe 精确版本>-ext-<frappe_ext 版本>` 作为发布版本，例如 `ghcr.io/transinfosh/tsuite-base:version-16.31.0-ext-0.1.0`。构建基础镜像时传入的 `framework_apps_json` 与附加应用采用相同的 `url`、`branch` 和 40 位 `commit` 格式：`branch` 可以是 Git Tag 或分支，但框架扩展必须使用发布 Tag。构建会同时校验该 Tag（优先）或分支仍指向所锁定的提交。只有 Frappe 精确版本、框架扩展的发布 Tag 或锁定提交变更时，才需要发布新的 `tsuite-base` 版本，并在调用方更新 `framework_image`。
 
 # Workflow roles
 

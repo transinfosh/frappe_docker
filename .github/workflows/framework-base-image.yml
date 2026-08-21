@@ -74,7 +74,7 @@ jobs:
     env:
       APPS_JSON_PATH: builder/.github/tmp/framework-apps.json
       BUILDER_DIR: builder
-      IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/frappe-framework
+      IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/tsuite-base
 
     steps:
       - name: Checkout image builder

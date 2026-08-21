@@ -37,7 +37,7 @@ extra_apps_json: >-
 
 `Framework Base Image` 工作流会生成不可变的框架镜像，其中包含 Frappe、`frappe_ext` 和已经构建的框架资源。应用发布工作流以该镜像为父层，只获取、安装和构建业务应用；因此业务代码变更不会使 Frappe 与 `frappe_ext` 的大层失效。
 
-基础镜像的标签必须包含 `frappe_ext` 的发布 Tag 和完整锁定提交的短 SHA，例如 `v16-frappe-ext-v0.1.0-internal-demo.5-ab3e40937e9a`。构建基础镜像时传入的 `framework_apps_json` 与附加应用采用相同的 `url`、`branch` 和 40 位 `commit` 格式：`branch` 可以是 Git Tag 或分支，但框架扩展必须使用发布 Tag。构建会同时校验该 Tag（优先）或分支仍指向所锁定的提交。只有框架版本、框架扩展的发布 Tag 或锁定提交变更时，才需要重新构建并在调用方更新 `framework_image`。
+基础镜像使用短名称和独立发布版本，例如 `ghcr.io/transinfosh/tsuite-base:v0.1.0`。构建基础镜像时传入的 `framework_apps_json` 与附加应用采用相同的 `url`、`branch` 和 40 位 `commit` 格式：`branch` 可以是 Git Tag 或分支，但框架扩展必须使用发布 Tag。构建会同时校验该 Tag（优先）或分支仍指向所锁定的提交。只有框架版本、框架扩展的发布 Tag 或锁定提交变更时，才需要发布新的 `tsuite-base` 版本，并在调用方更新 `framework_image`。
 
 # Workflow roles
 

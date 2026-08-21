@@ -15,7 +15,7 @@ This document describes the current workflow setup for shared core images and re
 - 用提交 SHA 锁定附加应用，即使附加应用仍使用长期分支，也能阻止分支移动后的非确定性重建；
 - 先构建单平台测试镜像，检查应用目录、`bench version`，并可创建 PostgreSQL 临时站点执行安装和迁移；
 - 发布版本号、源码 SHA 和稳定版 `latest` 三类标签，并写入 OCI 源码、版本和提交标签；
-- 在构建层清理 `node_modules`、Python 字节码和 Git 元数据，减少运行镜像体积；
+- 保留运行所需的 `node_modules`，仅清理 Python 字节码和 Git 元数据，确保 Frappe 的代码编辑器等按需加载资源可用；
 - 通过 BuildKit secret 传递私有源码令牌，令牌不会写入 `apps.json` 或最终镜像。
 
 提供 `APP_SOURCE_TOKEN` 时，构建器会为 `apps.json` 中应用所属的 GitHub
@@ -32,6 +32,12 @@ extra_apps_json: >-
 ```
 
 当附加应用分支发生变化时，旧版本重跑会停止，而不是静默构建不同内容。发布新版本前，应审查依赖变更并更新调用工作流中的锁定提交。
+
+## 框架基础镜像
+
+`Framework Base Image` 工作流会生成不可变的框架镜像，其中包含 Frappe、`frappe_ext` 和已经构建的框架资源。应用发布工作流以该镜像为父层，只获取、安装和构建业务应用；因此业务代码变更不会使 Frappe 与 `frappe_ext` 的大层失效。
+
+基础镜像的标签必须包含 `frappe_ext` 的完整锁定提交的短 SHA，例如 `v16-frappe-ext-ab3e40937e9a`。构建基础镜像时传入的 `framework_apps_json` 与附加应用采用相同的 `url`、`branch` 和 40 位 `commit` 格式。只有框架版本或框架扩展的锁定提交变更时，才需要重新构建并在调用方更新 `framework_image`。
 
 # Workflow roles
 

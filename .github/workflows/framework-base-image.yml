@@ -1,0 +1,155 @@
+name: Framework Base Image
+
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        description: "不可变基础镜像标签"
+        required: true
+        type: string
+      framework_apps_json:
+        description: "框架扩展应用及其分支、提交的 JSON 数组"
+        required: true
+        type: string
+      frappe_ref:
+        description: "Frappe 基础镜像和源码分支"
+        required: false
+        default: version-16
+        type: string
+      frappe_repo:
+        description: "Frappe 源码仓库"
+        required: false
+        default: https://github.com/transinfosh/frappe.git
+        type: string
+      frappe_image_prefix:
+        description: "Frappe 基础镜像前缀"
+        required: false
+        default: frappe
+        type: string
+    secrets:
+      APP_SOURCE_TOKEN:
+        required: false
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "不可变基础镜像标签"
+        required: true
+        type: string
+      framework_apps_json:
+        description: "框架扩展应用及其分支、提交的 JSON 数组"
+        required: true
+        type: string
+      frappe_ref:
+        description: "Frappe 基础镜像和源码分支"
+        required: true
+        default: version-16
+        type: string
+      frappe_repo:
+        description: "Frappe 源码仓库"
+        required: true
+        default: https://github.com/transinfosh/frappe.git
+        type: string
+      frappe_image_prefix:
+        description: "Frappe 基础镜像前缀"
+        required: true
+        default: frappe
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      APPS_JSON_PATH: .github/tmp/framework-apps.json
+      IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/frappe-framework
+
+    steps:
+      - name: Checkout image builder
+        uses: actions/checkout@v7
+
+      - name: Prepare source token
+        env:
+          SOURCE_TOKEN: ${{ secrets.APP_SOURCE_TOKEN }}
+          SOURCE_TOKEN_FILE: ${{ runner.temp }}/source-token
+        run: |
+          printf '%s' "$SOURCE_TOKEN" > "$SOURCE_TOKEN_FILE"
+          chmod 600 "$SOURCE_TOKEN_FILE"
+
+      - name: Prepare immutable framework metadata
+        id: prepare
+        env:
+          FRAMEWORK_APPS_JSON: ${{ inputs.framework_apps_json }}
+          SOURCE_TOKEN: ${{ secrets.APP_SOURCE_TOKEN }}
+        run: |
+          python3 resources/release/prepare_framework_base.py \
+            --framework-apps-json "$FRAMEWORK_APPS_JSON" \
+            --apps-json "$APPS_JSON_PATH" \
+            --github-output "$GITHUB_OUTPUT" \
+            --source-token "$SOURCE_TOKEN"
+
+      - name: Set image tag
+        id: image
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: echo "reference=${IMAGE_NAME,,}:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build smoke-test image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: images/layered/FrameworkBase.Containerfile
+          build-args: |
+            CACHE_BUST=${{ steps.prepare.outputs.cache_bust }}
+            FRAPPE_BRANCH=${{ inputs.frappe_ref }}
+            FRAPPE_IMAGE_PREFIX=${{ inputs.frappe_image_prefix }}
+            FRAPPE_PATH=${{ inputs.frappe_repo }}
+          cache-from: type=gha,scope=framework-base-${{ inputs.frappe_ref }}-${{ steps.prepare.outputs.cache_bust }}
+          cache-to: type=gha,mode=min,scope=framework-base-${{ inputs.frappe_ref }}-${{ steps.prepare.outputs.cache_bust }}
+          load: true
+          platforms: linux/amd64
+          secret-files: |
+            framework_apps_json=${{ env.APPS_JSON_PATH }}
+            source_token=${{ runner.temp }}/source-token
+          tags: local/framework-base:${{ github.run_id }}
+
+      - name: Smoke test framework image contents
+        run: |
+          test_image="local/framework-base:${GITHUB_RUN_ID}"
+          docker run --rm --entrypoint test "$test_image" -d /home/frappe/frappe-bench/apps/frappe
+          docker run --rm --entrypoint test "$test_image" -d /home/frappe/frappe-bench/apps/frappe_ext
+          docker run --rm --entrypoint test "$test_image" \
+            -f /home/frappe/frappe-bench/apps/frappe/node_modules/ace-builds/src-min-noconflict/ace.js
+          docker run --rm --entrypoint bench "$test_image" version
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Push framework image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: images/layered/FrameworkBase.Containerfile
+          build-args: |
+            CACHE_BUST=${{ steps.prepare.outputs.cache_bust }}
+            FRAPPE_BRANCH=${{ inputs.frappe_ref }}
+            FRAPPE_IMAGE_PREFIX=${{ inputs.frappe_image_prefix }}
+            FRAPPE_PATH=${{ inputs.frappe_repo }}
+          cache-from: type=gha,scope=framework-base-${{ inputs.frappe_ref }}-${{ steps.prepare.outputs.cache_bust }}
+          cache-to: type=gha,mode=min,scope=framework-base-${{ inputs.frappe_ref }}-${{ steps.prepare.outputs.cache_bust }}
+          platforms: linux/amd64
+          push: true
+          secret-files: |
+            framework_apps_json=${{ env.APPS_JSON_PATH }}
+            source_token=${{ runner.temp }}/source-token
+          tags: ${{ steps.image.outputs.reference }}

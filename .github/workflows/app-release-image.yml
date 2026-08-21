@@ -27,6 +27,10 @@ on:
         description: "包含本工作流和 Containerfile 的固定提交 SHA"
         required: true
         type: string
+      framework_image:
+        description: "包含 frappe 与框架扩展应用的不可变基础镜像"
+        required: true
+        type: string
       extra_apps_json:
         description: "附加应用及分支锁定提交的 JSON 数组"
         required: false
@@ -168,11 +172,9 @@ jobs:
           context: ${{ env.BUILDER_DIR }}
           file: ${{ env.BUILDER_DIR }}/images/layered/Release.Containerfile
           build-args: |
+            APP_NAME=${{ inputs.app_name }}
             CACHE_BUST=${{ steps.release.outputs.cache_bust }}
-            FRAPPE_BRANCH=${{ inputs.frappe_ref }}
-            FRAPPE_IMAGE_PREFIX=${{ inputs.frappe_image_prefix }}
-            FRAPPE_PATH=${{ inputs.frappe_repo }}
-            RUNTIME_APT_PACKAGES=${{ inputs.runtime_apt_packages }}
+            FRAMEWORK_IMAGE=${{ inputs.framework_image }}
           cache-from: type=gha,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           cache-to: type=gha,mode=min,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           load: true
@@ -260,11 +262,9 @@ jobs:
           context: ${{ env.BUILDER_DIR }}
           file: ${{ env.BUILDER_DIR }}/images/layered/Release.Containerfile
           build-args: |
+            APP_NAME=${{ inputs.app_name }}
             CACHE_BUST=${{ steps.release.outputs.cache_bust }}
-            FRAPPE_BRANCH=${{ inputs.frappe_ref }}
-            FRAPPE_IMAGE_PREFIX=${{ inputs.frappe_image_prefix }}
-            FRAPPE_PATH=${{ inputs.frappe_repo }}
-            RUNTIME_APT_PACKAGES=${{ inputs.runtime_apt_packages }}
+            FRAMEWORK_IMAGE=${{ inputs.framework_image }}
           cache-from: type=gha,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           cache-to: type=gha,mode=min,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           labels: |

@@ -19,6 +19,7 @@ USER frappe
 WORKDIR /home/frappe/frappe-bench
 
 RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1000 \
+  --mount=type=secret,id=packages_json,target=/opt/frappe/packages.json,uid=1000,gid=1000 \
   --mount=type=secret,id=current_repo_token,required=false,uid=1000,gid=1000 \
   --mount=type=secret,id=source_token,required=false,uid=1000,gid=1000 \
   : "${CACHE_BUST}" && \
@@ -27,7 +28,7 @@ RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1
   token="${source_token:-${current_repo_token}}" && \
   if [ -n "${token}" ]; then \
     if [ -n "${source_token}" ]; then \
-      python3 -c 'import json; print("\n".join(app["url"] for app in json.load(open("/opt/frappe/apps.json"))))'; \
+      python3 -c 'import json; print("\n".join(item["url"] for path in ("/opt/frappe/apps.json", "/opt/frappe/packages.json") for item in json.load(open(path))))'; \
     else \
       python3 -c 'import json; print(json.load(open("/opt/frappe/apps.json"))[0]["url"])'; \
     fi | \
@@ -46,6 +47,14 @@ RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1
         esac; \
       done; \
   fi && \
+  mkdir -p packages && \
+  python3 -c 'import json; print("\n".join("{} {}".format(package["url"], package["branch"]) for package in json.load(open("/opt/frappe/packages.json"))))' | \
+    while IFS=' ' read -r package_url package_branch; do \
+      [ -n "${package_url}" ] || continue; \
+      package_name="${package_url##*/}"; \
+      package_name="${package_name%.git}"; \
+      git clone --depth 1 --branch "${package_branch}" "${package_url}" "packages/${package_name}"; \
+    done && \
   python3 -c 'import json; print("\n".join("{} {}".format(app["url"], app["branch"]) for app in json.load(open("/opt/frappe/apps.json"))))' | \
     while IFS=' ' read -r app_url app_branch; do \
       bench get-app --skip-assets --branch "${app_branch}" "${app_url}"; \
@@ -54,6 +63,6 @@ RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1
   ln -s ../assets sites/assets && \
   bench build --app "${APP_NAME}" && \
   rm sites/assets && \
-  find apps -mindepth 1 -path "*/.git" -prune -exec rm -rf {} + && \
+  find apps packages -mindepth 1 -path "*/.git" -prune -exec rm -rf {} + && \
   find apps -mindepth 2 -type d -name __pycache__ -prune -exec rm -rf {} + && \
   find apps -type f \( -name "*.pyc" -o -name "*.pyo" \) -delete

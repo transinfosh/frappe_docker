@@ -38,10 +38,10 @@ def load_version(version_file: Path) -> str:
     return match.group(1)
 
 
-def load_extra_apps(raw_json: str) -> list[dict[str, str]]:
+def load_locked_repositories(raw_json: str, label: str) -> list[dict[str, str]]:
     data = json.loads(raw_json or "[]")
     if not isinstance(data, list):
-        raise ValueError("extra_apps_json 必须是 JSON 数组")
+        raise ValueError(f"{label} 必须是 JSON 数组")
 
     result: list[dict[str, str]] = []
     for index, item in enumerate(data, start=1):
@@ -53,11 +53,19 @@ def load_extra_apps(raw_json: str) -> list[dict[str, str]]:
         commit = str(item.get("commit", "")).strip().lower()
         if not url or not branch or not COMMIT_PATTERN.fullmatch(commit):
             raise ValueError(
-                f"第 {index} 个附加应用必须包含 url、branch 和 40 位 commit"
+                f"第 {index} 个{label}条目必须包含 url、branch 和 40 位 commit"
             )
 
         result.append({"url": url, "branch": branch, "commit": commit})
     return result
+
+
+def load_extra_apps(raw_json: str) -> list[dict[str, str]]:
+    return load_locked_repositories(raw_json, "extra_apps_json")
+
+
+def load_extra_packages(raw_json: str) -> list[dict[str, str]]:
+    return load_locked_repositories(raw_json, "extra_packages_json")
 
 
 def git_auth_environment(token: str) -> dict[str, str]:
@@ -136,7 +144,9 @@ def main() -> None:
     parser.add_argument("--version-file", type=Path, required=True)
     parser.add_argument("--source-sha", required=True)
     parser.add_argument("--extra-apps-json", default="[]")
+    parser.add_argument("--extra-packages-json", default="[]")
     parser.add_argument("--apps-json", type=Path, required=True)
+    parser.add_argument("--packages-json", type=Path, required=True)
     parser.add_argument("--github-output", type=Path, required=True)
     parser.add_argument("--source-token", default="")
     args = parser.parse_args()
@@ -144,14 +154,28 @@ def main() -> None:
     version = load_version(args.version_file)
     validate_tag(args.release_tag, version)
     extra_apps = load_extra_apps(args.extra_apps_json)
+    extra_packages = load_extra_packages(args.extra_packages_json)
     validate_dependency_locks(extra_apps, args.source_token)
+    validate_dependency_locks(extra_packages, args.source_token)
 
     apps = build_apps_json(args.app_repo, args.release_tag, extra_apps)
     args.apps_json.parent.mkdir(parents=True, exist_ok=True)
     args.apps_json.write_text(json.dumps(apps, indent=2) + "\n", encoding="utf-8")
+    args.packages_json.parent.mkdir(parents=True, exist_ok=True)
+    args.packages_json.write_text(
+        json.dumps(
+            [
+                {"url": package["url"], "branch": package["branch"]}
+                for package in extra_packages
+            ],
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
     lock_material = json.dumps(
-        {"source_sha": args.source_sha, "apps": extra_apps},
+        {"source_sha": args.source_sha, "apps": extra_apps, "packages": extra_packages},
         sort_keys=True,
         separators=(",", ":"),
     )

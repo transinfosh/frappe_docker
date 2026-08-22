@@ -39,6 +39,12 @@ class PrepareReleaseTest(unittest.TestCase):
                 '[{"url":"https://github.com/transinfosh/base.git","branch":"develop"}]'
             )
 
+    def test_load_extra_packages_requires_immutable_commit(self):
+        with self.assertRaisesRegex(ValueError, "40 位 commit"):
+            prepare_release.load_extra_packages(
+                '[{"url":"https://github.com/transinfosh/transinfo-ui.git","branch":"v0.1.4"}]'
+            )
+
     def test_validate_tag_requires_version_match(self):
         with self.assertRaisesRegex(ValueError, "不一致"):
             prepare_release.validate_tag("v1.2.4", "1.2.3")

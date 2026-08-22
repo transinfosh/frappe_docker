@@ -36,6 +36,11 @@ on:
         required: false
         default: "[]"
         type: string
+      extra_packages_json:
+        description: "前端共享包及分支锁定提交的 JSON 数组"
+        required: false
+        default: "[]"
+        type: string
       smoke_test_apps:
         description: "需要检查的应用目录，以空格分隔"
         required: false
@@ -90,6 +95,7 @@ jobs:
     timeout-minutes: 45
     env:
       APPS_JSON_PATH: builder/.github/tmp/apps.json
+      PACKAGES_JSON_PATH: builder/.github/tmp/packages.json
       BUILDER_DIR: builder
       SOURCE_DIR: app-source
       TEST_IMAGE: local/${{ inputs.app_name }}:${{ github.run_id }}-${{ github.run_attempt }}
@@ -129,6 +135,7 @@ jobs:
         env:
           APP_REPO: ${{ inputs.app_repo }}
           EXTRA_APPS_JSON: ${{ inputs.extra_apps_json }}
+          EXTRA_PACKAGES_JSON: ${{ inputs.extra_packages_json }}
           RELEASE_TAG: ${{ inputs.release_tag }}
           SOURCE_TOKEN: ${{ secrets.APP_SOURCE_TOKEN }}
           VERSION_FILE: ${{ inputs.version_file }}
@@ -140,7 +147,9 @@ jobs:
             --version-file "$SOURCE_DIR/$VERSION_FILE" \
             --source-sha "$source_sha" \
             --extra-apps-json "$EXTRA_APPS_JSON" \
+            --extra-packages-json "$EXTRA_PACKAGES_JSON" \
             --apps-json "$APPS_JSON_PATH" \
+            --packages-json "$PACKAGES_JSON_PATH" \
             --github-output "$GITHUB_OUTPUT" \
             --source-token "$SOURCE_TOKEN"
 
@@ -189,6 +198,7 @@ jobs:
           platforms: linux/amd64
           secret-files: |
             apps_json=${{ env.APPS_JSON_PATH }}
+            packages_json=${{ env.PACKAGES_JSON_PATH }}
             current_repo_token=${{ steps.token.outputs.current_file }}
             source_token=${{ steps.token.outputs.source_file }}
           tags: ${{ env.TEST_IMAGE }}
@@ -277,6 +287,7 @@ jobs:
           push: true
           secret-files: |
             apps_json=${{ env.APPS_JSON_PATH }}
+            packages_json=${{ env.PACKAGES_JSON_PATH }}
             current_repo_token=${{ steps.token.outputs.current_file }}
             source_token=${{ steps.token.outputs.source_file }}
           tags: ${{ steps.image.outputs.tags }}

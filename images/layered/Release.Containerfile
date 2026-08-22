@@ -90,3 +90,4 @@ RUN chmod 755 /usr/local/bin/entrypoint.sh
 
 USER frappe
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["start.sh"]

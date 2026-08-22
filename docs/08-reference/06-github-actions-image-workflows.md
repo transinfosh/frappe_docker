@@ -13,6 +13,7 @@ This document describes the current workflow setup for shared core images and re
 - 校验 Git 标签与应用 `__version__` 一致，不在发布时反向修改源码或自动创建标签；
 - 使用 `images/layered/Release.Containerfile` 和 GitHub Actions 构建缓存；
 - 用提交 SHA 锁定附加应用，即使附加应用仍使用长期分支，也能阻止分支移动后的非确定性重建；
+- 以 Git Tag 和提交 SHA 双重锁定前端共享包，并在构建业务应用资源前检出到 Bench 的 `packages/` 目录；
 - 先构建单平台测试镜像，检查应用目录、`bench version`，并可创建 PostgreSQL 临时站点执行安装和迁移；
 - 发布版本号、源码 SHA 和稳定版 `latest` 三类标签，并写入 OCI 源码、版本和提交标签；
 - 保留运行所需的 `node_modules`，仅清理 Python 字节码和 Git 元数据，确保 Frappe 的代码编辑器等按需加载资源可用；
@@ -50,6 +51,19 @@ extra_apps_json: >-
 ```
 
 当附加应用分支发生变化时，旧版本重跑会停止，而不是静默构建不同内容。发布新版本前，应审查依赖变更并更新调用工作流中的锁定提交。
+
+组合镜像使用本地 `file:` 共享包时，也必须使用相同的锁定格式，并通过 `extra_packages_json`
+声明。包会按仓库名检出到 `packages/`，例如：
+
+```yaml
+extra_packages_json: >-
+  [{"url":"https://github.com/transinfosh/transinfo-ui.git",
+    "branch":"v0.1.4",
+    "commit":"完整的 40 位提交 SHA"}]
+build_apps: tbi tai
+```
+
+`build_apps` 应列出所有有前端资产的组合应用；为空时只构建主应用。
 
 ## 框架基础镜像
 

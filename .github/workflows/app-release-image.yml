@@ -228,16 +228,7 @@ jobs:
           docker run --rm --entrypoint bash "$TEST_IMAGE" -lc '
             test -L /home/frappe/frappe-bench/sites/assets
             test "$(readlink /home/frappe/frappe-bench/sites/assets)" = "/home/frappe/frappe-bench/assets"
-            python3 - <<"PY"
-            import json
-            from pathlib import Path
-
-            assets_root = Path("/home/frappe/frappe-bench/assets")
-            assets = json.loads((assets_root / "assets.json").read_text())
-            missing = [path for path in assets.values() if not (assets_root / path.removeprefix("/assets/")).is_file()]
-            if missing:
-                raise SystemExit("missing built assets:\n" + "\n".join(missing))
-            PY
+            python3 -c "import json; from pathlib import Path; root = Path(\"/home/frappe/frappe-bench/assets\"); assets = json.loads((root / \"assets.json\").read_text()); missing = [path for path in assets.values() if not (root / path.removeprefix(\"/assets/\")).is_file()]; (_ for _ in ()).throw(SystemExit(\"missing built assets:\\n\" + \"\\n\".join(missing))) if missing else None"
           '
 
       - name: Smoke test site installation

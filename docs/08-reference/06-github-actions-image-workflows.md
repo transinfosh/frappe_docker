@@ -27,7 +27,7 @@ This document describes the current workflow setup for shared core images and re
 | ------------- | -------- | ------------------------------------------------- |
 | 业务应用      | `vX.Y.Z` | `X.Y.Z`                                           |
 | `frappe_ext`  | `vX.Y.Z` | 不单独发布运行镜像；基础镜像 Tag 使用 `ext-X.Y.Z` |
-| `tsuite-base` | 不适用   | `version-<Frappe 精确版本>-ext-<frappe_ext 版本>` |
+| `tsuite-base` | 不适用   | `<Frappe 精确版本>-ext-<frappe_ext 版本>`         |
 
 例如，Frappe 为 `16.31.0`、`frappe_ext` 为 `v0.1.0` 时，基础镜像必须为：
 
@@ -69,7 +69,7 @@ build_apps: tbi tai
 
 `Framework Base Image` 工作流会生成不可变的框架镜像，其中包含 Frappe、`frappe_ext` 和已经构建的框架资源。应用发布工作流以该镜像为父层，只获取、安装和构建业务应用；因此业务代码变更不会使 Frappe 与 `frappe_ext` 的大层失效。
 
-基础镜像使用 `version-<Frappe 精确版本>-ext-<frappe_ext 版本>` 作为发布版本，例如 `ghcr.io/transinfosh/tsuite-base:version-16.31.0-ts.1-ext-0.1.0`。fork 的 Frappe 版本必须以官方基线加 TSuite 修订号表示：Git Tag 为 `v<官方版本>-ts.<修订号>`，镜像版本中的 Frappe 精确版本为 `<官方版本>-ts.<修订号>`；例如官方 `16.31.0` 后的第一组 TSuite 修改为 `v16.31.0-ts.1`。构建时 `frappe_ref` 必须固定到该 fork 发布 Tag；`frappe_image_tag` 仅指定构建和运行所用的官方基础镜像层（例如 `version-16`），不得替代源码版本。构建基础镜像时传入的 `framework_apps_json` 与附加应用采用相同的 `url`、`branch` 和 40 位 `commit` 格式：`branch` 可以是 Git Tag 或分支，但框架扩展必须使用发布 Tag。构建会同时校验该 Tag（优先）或分支仍指向所锁定的提交。只有 Frappe 精确版本、框架扩展的发布 Tag 或锁定提交变更时，才需要发布新的 `tsuite-base` 版本，并在调用方更新 `framework_image`。
+基础镜像使用 `<Frappe 精确版本>-ext-<frappe_ext 版本>` 作为发布版本，例如 `ghcr.io/transinfosh/tsuite-base:16.31.0-ts.1-ext-0.1.0`。fork 的 Frappe 版本必须以官方基线加 TSuite 修订号表示：Git Tag 为 `v<官方版本>-ts.<修订号>`，镜像版本中的 Frappe 精确版本为 `<官方版本>-ts.<修订号>`；例如官方 `16.31.0` 后的第一组 TSuite 修改为 `v16.31.0-ts.1`。构建时 `frappe_ref` 必须固定到该 fork 发布 Tag；`frappe_image_tag` 仅指定构建和运行所用的官方基础镜像层（例如 `version-16`），不得替代源码版本。构建基础镜像时传入的 `framework_apps_json` 与附加应用采用相同的 `url`、`branch` 和 40 位 `commit` 格式：`branch` 可以是 Git Tag 或分支，但框架扩展必须使用发布 Tag。构建会同时校验该 Tag（优先）或分支仍指向所锁定的提交。只有 Frappe 精确版本、框架扩展的发布 Tag 或锁定提交变更时，才需要发布新的 `tsuite-base` 版本，并在调用方更新 `framework_image`。
 
 # Workflow roles
 

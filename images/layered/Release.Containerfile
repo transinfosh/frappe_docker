@@ -79,5 +79,6 @@ COPY --from=builder --chown=frappe:frappe /home/frappe/frappe-bench/apps ./apps
 COPY --from=builder --chown=frappe:frappe /home/frappe/frappe-bench/packages ./packages
 COPY --from=builder --chown=frappe:frappe /home/frappe/frappe-bench/assets ./assets
 COPY --from=builder --chown=frappe:frappe /home/frappe/frappe-bench/sites/apps.txt ./sites/apps.txt
+COPY --from=builder --chown=frappe:frappe /home/frappe/frappe-bench/env ./env
 
 RUN rm -rf sites/assets && ln -s ../assets sites/assets

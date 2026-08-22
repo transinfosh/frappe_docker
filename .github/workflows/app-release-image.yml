@@ -185,7 +185,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ github.token }}
+          password: ${{ secrets.APP_SOURCE_TOKEN || github.token }}
 
       - name: Build smoke-test image
         uses: docker/build-push-action@v7

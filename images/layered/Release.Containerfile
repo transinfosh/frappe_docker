@@ -66,4 +66,5 @@ RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1
   rm sites/assets && \
   find apps packages -mindepth 1 -path "*/.git" -prune -exec rm -rf {} + && \
   find apps -mindepth 2 -type d -name __pycache__ -prune -exec rm -rf {} + && \
+  find apps -type d -name node_modules -prune -exec rm -rf {} + && \
   find apps -type f \( -name "*.pyc" -o -name "*.pyo" \) -delete

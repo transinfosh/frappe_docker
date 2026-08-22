@@ -30,6 +30,11 @@ on:
         required: false
         default: frappe
         type: string
+      frappe_image_tag:
+        description: "Frappe 构建与运行基础镜像标签"
+        required: false
+        default: version-16
+        type: string
     secrets:
       APP_SOURCE_TOKEN:
         required: false
@@ -61,6 +66,11 @@ on:
         description: "Frappe 基础镜像前缀"
         required: true
         default: frappe
+        type: string
+      frappe_image_tag:
+        description: "Frappe 构建与运行基础镜像标签"
+        required: true
+        default: version-16
         type: string
 
 permissions:
@@ -122,6 +132,7 @@ jobs:
             CACHE_BUST=${{ steps.prepare.outputs.cache_bust }}
             FRAPPE_BRANCH=${{ inputs.frappe_ref }}
             FRAPPE_IMAGE_PREFIX=${{ inputs.frappe_image_prefix }}
+            FRAPPE_IMAGE_TAG=${{ inputs.frappe_image_tag }}
             FRAPPE_PATH=${{ inputs.frappe_repo }}
           cache-from: type=gha,scope=framework-base-${{ inputs.frappe_ref }}-${{ steps.prepare.outputs.cache_bust }}
           cache-to: type=gha,mode=min,scope=framework-base-${{ inputs.frappe_ref }}-${{ steps.prepare.outputs.cache_bust }}
@@ -157,6 +168,7 @@ jobs:
             CACHE_BUST=${{ steps.prepare.outputs.cache_bust }}
             FRAPPE_BRANCH=${{ inputs.frappe_ref }}
             FRAPPE_IMAGE_PREFIX=${{ inputs.frappe_image_prefix }}
+            FRAPPE_IMAGE_TAG=${{ inputs.frappe_image_tag }}
             FRAPPE_PATH=${{ inputs.frappe_repo }}
           cache-from: type=gha,scope=framework-base-${{ inputs.frappe_ref }}-${{ steps.prepare.outputs.cache_bust }}
           cache-to: type=gha,mode=min,scope=framework-base-${{ inputs.frappe_ref }}-${{ steps.prepare.outputs.cache_bust }}

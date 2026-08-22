@@ -1,7 +1,8 @@
 ARG FRAPPE_BRANCH=version-16
 ARG FRAPPE_IMAGE_PREFIX=frappe
+ARG FRAPPE_IMAGE_TAG=version-16
 
-FROM ${FRAPPE_IMAGE_PREFIX}/build:${FRAPPE_BRANCH} AS builder
+FROM ${FRAPPE_IMAGE_PREFIX}/build:${FRAPPE_IMAGE_TAG} AS builder
 
 ARG FRAPPE_BRANCH=version-16
 ARG FRAPPE_PATH=https://github.com/frappe/frappe
@@ -43,7 +44,7 @@ RUN --mount=type=secret,id=framework_apps_json,target=/opt/frappe/framework-apps
   find apps -mindepth 2 -type d -name __pycache__ -prune -exec rm -rf {} + && \
   find apps -type f \( -name "*.pyc" -o -name "*.pyo" \) -delete
 
-FROM ${FRAPPE_IMAGE_PREFIX}/base:${FRAPPE_BRANCH}
+FROM ${FRAPPE_IMAGE_PREFIX}/base:${FRAPPE_IMAGE_TAG}
 
 USER frappe
 

@@ -1,20 +1,10 @@
 ARG FRAMEWORK_IMAGE=frappe/base:version-16
 
-FROM ${FRAMEWORK_IMAGE}
+FROM ${FRAMEWORK_IMAGE} AS builder
 
 ARG APP_NAME
 ARG BUILD_APPS=""
 ARG CACHE_BUST=""
-ARG RUNTIME_APT_PACKAGES=""
-
-USER root
-
-RUN if [ -n "${RUNTIME_APT_PACKAGES}" ]; then \
-      apt-get update && \
-      apt-get install -y --no-install-recommends ${RUNTIME_APT_PACKAGES} && \
-      rm -rf /var/lib/apt/lists/*; \
-    fi
-
 USER frappe
 
 WORKDIR /home/frappe/frappe-bench
@@ -68,3 +58,25 @@ RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1
   find apps -mindepth 2 -type d -name __pycache__ -prune -exec rm -rf {} + && \
   find apps -type d -name node_modules -prune -exec rm -rf {} + && \
   find apps -type f \( -name "*.pyc" -o -name "*.pyo" \) -delete
+
+FROM ${FRAMEWORK_IMAGE}
+
+ARG RUNTIME_APT_PACKAGES=""
+
+USER root
+
+RUN if [ -n "${RUNTIME_APT_PACKAGES}" ]; then \
+      apt-get update && \
+      apt-get install -y --no-install-recommends ${RUNTIME_APT_PACKAGES} && \
+      rm -rf /var/lib/apt/lists/*; \
+    fi
+
+USER frappe
+
+WORKDIR /home/frappe/frappe-bench
+
+COPY --from=builder --chown=frappe:frappe /home/frappe/frappe-bench/apps ./apps
+COPY --from=builder --chown=frappe:frappe /home/frappe/frappe-bench/packages ./packages
+COPY --from=builder --chown=frappe:frappe /home/frappe/frappe-bench/assets ./assets
+
+RUN rm -rf sites/assets && ln -s ../assets sites/assets

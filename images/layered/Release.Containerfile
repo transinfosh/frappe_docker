@@ -3,6 +3,7 @@ ARG FRAMEWORK_IMAGE=frappe/base:version-16
 FROM ${FRAMEWORK_IMAGE}
 
 ARG APP_NAME
+ARG BUILD_APPS=""
 ARG CACHE_BUST=""
 ARG RUNTIME_APT_PACKAGES=""
 
@@ -61,7 +62,7 @@ RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1
     done && \
   rm -f "${HOME}/.gitconfig" && \
   ln -s ../assets sites/assets && \
-  bench build --app "${APP_NAME}" && \
+  for app in ${BUILD_APPS:-${APP_NAME}}; do bench build --app "${app}"; done && \
   rm sites/assets && \
   find apps packages -mindepth 1 -path "*/.git" -prune -exec rm -rf {} + && \
   find apps -mindepth 2 -type d -name __pycache__ -prune -exec rm -rf {} + && \

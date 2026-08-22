@@ -31,6 +31,11 @@ on:
         description: "包含 frappe 与框架扩展应用的不可变基础镜像"
         required: true
         type: string
+      build_apps:
+        description: "需要构建前端资源的应用，以空格分隔；为空时仅构建主应用"
+        required: false
+        default: ""
+        type: string
       extra_apps_json:
         description: "附加应用及分支锁定提交的 JSON 数组"
         required: false
@@ -191,6 +196,7 @@ jobs:
             APP_NAME=${{ inputs.app_name }}
             CACHE_BUST=${{ steps.release.outputs.cache_bust }}
             FRAMEWORK_IMAGE=${{ inputs.framework_image }}
+            BUILD_APPS=${{ inputs.build_apps }}
             RUNTIME_APT_PACKAGES=${{ inputs.runtime_apt_packages }}
           cache-from: type=gha,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           cache-to: type=gha,mode=min,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
@@ -276,6 +282,7 @@ jobs:
             APP_NAME=${{ inputs.app_name }}
             CACHE_BUST=${{ steps.release.outputs.cache_bust }}
             FRAMEWORK_IMAGE=${{ inputs.framework_image }}
+            BUILD_APPS=${{ inputs.build_apps }}
             RUNTIME_APT_PACKAGES=${{ inputs.runtime_apt_packages }}
           cache-from: type=gha,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           cache-to: type=gha,mode=min,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}

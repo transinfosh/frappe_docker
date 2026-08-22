@@ -82,3 +82,11 @@ COPY --from=builder --chown=frappe:frappe /home/frappe/frappe-bench/sites/apps.t
 COPY --from=builder --chown=frappe:frappe /home/frappe/frappe-bench/env ./env
 
 RUN rm -rf sites/assets && ln -s ../assets sites/assets
+
+USER root
+
+COPY resources/core/main-entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod 755 /usr/local/bin/entrypoint.sh
+
+USER frappe
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

@@ -223,6 +223,23 @@ jobs:
             -f "/home/frappe/frappe-bench/apps/frappe/node_modules/ace-builds/src-min-noconflict/ace.js"
           docker run --rm --entrypoint bench "$TEST_IMAGE" version
 
+      - name: Verify built asset manifest
+        run: |
+          docker run --rm --entrypoint bash "$TEST_IMAGE" -lc '
+            test -L /home/frappe/frappe-bench/sites/assets
+            test "$(readlink /home/frappe/frappe-bench/sites/assets)" = "/home/frappe/frappe-bench/assets"
+            python3 - <<"PY"
+            import json
+            from pathlib import Path
+
+            assets_root = Path("/home/frappe/frappe-bench/assets")
+            assets = json.loads((assets_root / "assets.json").read_text())
+            missing = [path for path in assets.values() if not (assets_root / path.removeprefix("/assets/")).is_file()]
+            if missing:
+                raise SystemExit("missing built assets:\n" + "\n".join(missing))
+            PY
+          '
+
       - name: Smoke test site installation
         if: ${{ inputs.site_test_apps != '' }}
         env:

@@ -233,7 +233,7 @@ jobs:
         env:
           RUNTIME_PYTHON_IMPORTS: ${{ inputs.runtime_python_imports }}
         run: |
-          docker run --rm --entrypoint python3 "$TEST_IMAGE" -c '
+          docker run --rm --entrypoint /home/frappe/frappe-bench/env/bin/python "$TEST_IMAGE" -c '
           import importlib
           import re
           import sys

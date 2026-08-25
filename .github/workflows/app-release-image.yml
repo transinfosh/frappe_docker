@@ -61,6 +61,11 @@ on:
         required: false
         default: ""
         type: string
+      runtime_python_imports:
+        description: "需要在运行镜像中验证可导入的 Python 模块，以空格分隔"
+        required: false
+        default: ""
+        type: string
       frappe_ref:
         description: "Frappe 基础镜像和源码分支"
         required: false
@@ -222,6 +227,24 @@ jobs:
           docker run --rm --entrypoint test "$TEST_IMAGE" \
             -f "/home/frappe/frappe-bench/apps/frappe/node_modules/ace-builds/src-min-noconflict/ace.js"
           docker run --rm --entrypoint bench "$TEST_IMAGE" version
+
+      - name: Smoke test runtime Python imports
+        if: ${{ inputs.runtime_python_imports != '' }}
+        env:
+          RUNTIME_PYTHON_IMPORTS: ${{ inputs.runtime_python_imports }}
+        run: |
+          docker run --rm --entrypoint python3 "$TEST_IMAGE" -c '
+          import importlib
+          import re
+          import sys
+
+          modules = sys.argv[1].split()
+          invalid = [name for name in modules if not re.fullmatch(r"[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*", name)]
+          if invalid:
+              raise SystemExit(f"invalid Python module names: {invalid}")
+          for name in modules:
+              importlib.import_module(name)
+          ' "$RUNTIME_PYTHON_IMPORTS"
 
       - name: Verify built asset manifest
         run: |

@@ -38,6 +38,8 @@ on:
     secrets:
       APP_SOURCE_TOKEN:
         required: false
+      PACKAGE_TOKEN:
+        required: false
   workflow_dispatch:
     inputs:
       image_tag:
@@ -157,7 +159,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ github.token }}
+          password: ${{ secrets.PACKAGE_TOKEN || github.token }}
 
       - name: Push framework image
         uses: docker/build-push-action@v7

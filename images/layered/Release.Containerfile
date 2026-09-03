@@ -46,6 +46,10 @@ RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1
       package_name="${package_name%.git}"; \
       git clone --depth 1 --branch "${package_branch}" "${package_url}" "packages/${package_name}"; \
     done && \
+  for package_dir in packages/*; do \
+    [ -f "${package_dir}/package.json" ] || continue; \
+    (cd "${package_dir}" && yarn install --frozen-lockfile --non-interactive); \
+  done && \
   python3 -c 'import json; print("\n".join("{} {}".format(app["url"], app["branch"]) for app in json.load(open("/opt/frappe/apps.json"))))' | \
     while IFS=' ' read -r app_url app_branch; do \
       bench get-app --skip-assets --branch "${app_branch}" "${app_url}"; \

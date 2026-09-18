@@ -141,12 +141,14 @@ def s3_service(python_path: str, compose: Compose):
         "minio",
         "-d",
         "-e",
-        f"MINIO_ACCESS_KEY={access_key}",
+        f"MINIO_ROOT_USER={access_key}",
         "-e",
-        f"MINIO_SECRET_KEY={secret_key}",
+        f"MINIO_ROOT_PASSWORD={secret_key}",
         "--network",
         f"{compose.project_name}_default",
-        "minio/minio",
+        # Use the official registry and pin the multi-architecture test image.
+        "quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z"
+        "@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e",
         "server",
         "/data",
     )

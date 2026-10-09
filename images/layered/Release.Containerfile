@@ -54,6 +54,13 @@ RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1
     while IFS=' ' read -r app_url app_branch; do \
       bench get-app --skip-assets --branch "${app_branch}" "${app_url}"; \
     done && \
+  set -- && \
+  for app_dir in apps/*; do \
+    [ -f "${app_dir}/pyproject.toml" ] || [ -f "${app_dir}/setup.py" ] || continue; \
+    set -- "$@" -e "${app_dir}"; \
+  done && \
+  uv pip install --python env/bin/python "$@" && \
+  env/bin/python -m pip check && \
   rm -f "${HOME}/.gitconfig" && \
   ln -s ../assets sites/assets && \
   for app in ${BUILD_APPS:-${APP_NAME}}; do bench build --app "${app}"; done && \

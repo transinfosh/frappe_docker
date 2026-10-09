@@ -228,6 +228,10 @@ jobs:
             -f "/home/frappe/frappe-bench/apps/frappe/node_modules/ace-builds/src-min-noconflict/ace.js"
           docker run --rm --entrypoint bench "$TEST_IMAGE" version
 
+      - name: Smoke test runtime Python dependencies
+        run: |
+          docker run --rm --entrypoint /home/frappe/frappe-bench/env/bin/python "$TEST_IMAGE" -m pip check
+
       - name: Smoke test runtime Python imports
         if: ${{ inputs.runtime_python_imports != '' }}
         env:

@@ -66,6 +66,11 @@ on:
         required: false
         default: ""
         type: string
+      install_mssql_odbc:
+        description: "安装并验证 Microsoft ODBC 18；启用表示接受驱动 EULA"
+        required: false
+        default: false
+        type: boolean
       frappe_ref:
         description: "Frappe 基础镜像和源码分支"
         required: false
@@ -209,6 +214,7 @@ jobs:
             FRAMEWORK_IMAGE=${{ inputs.framework_image }}
             BUILD_APPS=${{ inputs.build_apps }}
             RUNTIME_APT_PACKAGES=${{ inputs.runtime_apt_packages }}
+            INSTALL_MSSQL_ODBC=${{ inputs.install_mssql_odbc }}
           cache-from: type=gha,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           cache-to: type=gha,mode=min,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           load: true
@@ -255,6 +261,12 @@ jobs:
           for name in modules:
               importlib.import_module(name)
           ' "$RUNTIME_PYTHON_IMPORTS"
+
+      - name: Smoke test SQL Server ODBC driver
+        if: ${{ inputs.install_mssql_odbc }}
+        run: |
+          docker run --rm --network none --entrypoint /home/frappe/frappe-bench/env/bin/python "$TEST_IMAGE" \
+            /usr/local/bin/verify_mssql_odbc.py
 
       - name: Verify built asset manifest
         run: |
@@ -325,6 +337,7 @@ jobs:
             FRAMEWORK_IMAGE=${{ inputs.framework_image }}
             BUILD_APPS=${{ inputs.build_apps }}
             RUNTIME_APT_PACKAGES=${{ inputs.runtime_apt_packages }}
+            INSTALL_MSSQL_ODBC=${{ inputs.install_mssql_odbc }}
           cache-from: type=gha,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           cache-to: type=gha,mode=min,scope=release-${{ inputs.app_name }}-${{ inputs.frappe_ref }}
           labels: |

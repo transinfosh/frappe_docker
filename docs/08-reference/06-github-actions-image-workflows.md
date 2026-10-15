@@ -65,6 +65,25 @@ build_apps: tbi tai
 
 `build_apps` 应列出所有有前端资产的组合应用；为空时只构建主应用。
 
+### SQL Server 运行依赖
+
+直接使用 `pyodbc` 连接 SQL Server 的应用应设置 `install_mssql_odbc: true`。
+默认值为 `false`，已有调用方不受影响。启用此参数表示接受 Microsoft ODBC 驱动的 EULA。
+构建器根据运行镜像的 Debian/Ubuntu 版本配置 Microsoft 官方软件源，安装
+`msodbcsql18` 和 `libgssapi-krb5-2`，并在最终镜像中检查驱动注册及动态库加载。
+该检查不连接数据库，同时覆盖驱动未注册、文件缺失和共享库依赖缺失；检查失败会阻止构建/发布。
+仅安装 `unixodbc-dev` 或验证 `import pyodbc` 不能保证 SQL Server 驱动可用。
+
+```yaml
+install_mssql_odbc: true
+runtime_python_imports: pyodbc
+```
+
+驱动安装在应用运行镜像中，因此 Web、队列和调度器使用同一镜像时都具备该依赖。
+修改调用参数时，工作流 `uses` 与 `builder_ref` 必须同时固定到支持此参数的构建器提交。
+发布前可使用 `Release.Containerfile` 的 `runtime-dependencies` target 独立验证系统依赖层，
+但此 target 不包含应用构建步骤，不能作为最终发布镜像。
+
 ## 框架基础镜像
 
 `Framework Base Image` 工作流会生成不可变的框架镜像，其中包含 Frappe、`frappe_ext` 和已经构建的框架资源。应用发布工作流以该镜像为父层，只获取、安装和构建业务应用；因此业务代码变更不会使 Frappe 与 `frappe_ext` 的大层失效。

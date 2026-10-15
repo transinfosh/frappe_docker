@@ -70,9 +70,10 @@ RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1
   find apps -type d -name node_modules -prune -exec rm -rf {} + && \
   find apps -type f \( -name "*.pyc" -o -name "*.pyo" \) -delete
 
-FROM ${FRAMEWORK_IMAGE}
+FROM ${FRAMEWORK_IMAGE} AS runtime-dependencies
 
 ARG RUNTIME_APT_PACKAGES=""
+ARG INSTALL_MSSQL_ODBC=false
 
 USER root
 
@@ -81,6 +82,16 @@ RUN if [ -n "${RUNTIME_APT_PACKAGES}" ]; then \
       apt-get install -y --no-install-recommends ${RUNTIME_APT_PACKAGES} && \
       rm -rf /var/lib/apt/lists/*; \
     fi
+
+COPY resources/release/install_mssql_odbc.sh /tmp/install_mssql_odbc.sh
+RUN case "${INSTALL_MSSQL_ODBC}" in \
+      true) bash /tmp/install_mssql_odbc.sh ;; \
+      false) ;; \
+      *) echo "INSTALL_MSSQL_ODBC must be true or false" >&2; exit 1 ;; \
+    esac && rm /tmp/install_mssql_odbc.sh
+COPY resources/release/verify_mssql_odbc.py /usr/local/bin/verify_mssql_odbc.py
+
+FROM runtime-dependencies AS release
 
 USER frappe
 
@@ -103,5 +114,8 @@ COPY resources/core/main-entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod 755 /usr/local/bin/entrypoint.sh
 
 USER frappe
+RUN if [ "${INSTALL_MSSQL_ODBC}" = "true" ]; then \
+      env/bin/python /usr/local/bin/verify_mssql_odbc.py; \
+    fi
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["start.sh"]

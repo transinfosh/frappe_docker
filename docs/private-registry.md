@@ -15,6 +15,10 @@
 
 也可以对受信任的同组织公共工作流使用 `secrets: inherit`。
 
+## Frappe 基础镜像
+
+`.github/workflows/framework-base-image.yml` 同样在构建与 GHCR 发布成功后调用通用同步模块，按精确的 `image_tag` 发布 `tsuite-base`。
+
 ## 其他镜像构建流程
 
 在镜像成功发布后调用 `.github/workflows/mirror-release-image.yml`，传入 `image_name`（不带 tag 的完整源仓库地址）和 `image_tag`（精确 tag），以及上述两个 Registry secrets。它不依赖 Frappe、DocType 或具体构建技术，支持 GHCR 与 Docker Hub 等标准镜像源，也可以手动触发来回填已有版本。`release_tag` 保留兼容 Frappe 发布，数值版本的前导 v 会去除；其他流程优先使用不做改写的 `image_tag`。

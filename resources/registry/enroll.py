@@ -13,7 +13,9 @@ def github(path: str) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("repository", help="transinfosh/<repository>")
-    parser.add_argument("--refresh", action="store_true", help="Refresh existing Registry secrets after rotation")
+    parser.add_argument(
+        "--refresh", action="store_true", help="Refresh existing Registry secrets after rotation"
+    )
     args = parser.parse_args()
     if not args.repository.startswith("transinfosh/") or args.repository.count("/") != 1:
         parser.error("Only repositories in the authorized transinfosh organization can be enrolled")
@@ -42,7 +44,10 @@ def main() -> None:
     account = json.loads(subprocess.check_output(
         ["ssh", "-o", "BatchMode=yes", "adam@192.168.2.52", remote], text=True
     ))
-    for name, value in (("REGISTRY_USERNAME", account["username"]), ("REGISTRY_PASSWORD", account["password"])):
+    for name, value in (
+        ("REGISTRY_USERNAME", account["username"]),
+        ("REGISTRY_PASSWORD", account["password"]),
+    ):
         subprocess.run(
             ["gh", "secret", "set", name, "--repo", args.repository], input=value, text=True, check=True
         )

@@ -36,6 +36,12 @@ on:
         default: version-16
         type: string
     secrets:
+      REGISTRY_USERNAME:
+        description: "Private Registry publishing account"
+        required: true
+      REGISTRY_PASSWORD:
+        description: "Private Registry publishing password"
+        required: true
       APP_SOURCE_TOKEN:
         required: false
   workflow_dispatch:
@@ -178,3 +184,13 @@ jobs:
             framework_apps_json=${{ env.APPS_JSON_PATH }}
             source_token=${{ runner.temp }}/source-token
           tags: ${{ steps.image.outputs.reference }}
+
+  mirror:
+    needs: build
+    uses: ./.github/workflows/mirror-release-image.yml
+    with:
+      image_name: ghcr.io/${{ github.repository_owner }}/tsuite-base
+      image_tag: ${{ inputs.image_tag }}
+    secrets:
+      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}

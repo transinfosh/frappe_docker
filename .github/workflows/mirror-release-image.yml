@@ -4,12 +4,18 @@ on:
   workflow_call:
     inputs:
       image_name:
-        description: "GHCR image name without a tag"
+        description: "Full source registry image name without a tag"
         required: true
+        type: string
+      image_tag:
+        description: "Exact source image tag; takes precedence over release_tag"
+        required: false
+        default: ""
         type: string
       release_tag:
         description: "Published version, optionally prefixed with v"
-        required: true
+        required: false
+        default: ""
         type: string
     secrets:
       REGISTRY_USERNAME:
@@ -24,14 +30,19 @@ on:
   workflow_dispatch:
     inputs:
       image_name:
-        description: "GHCR image name without a tag"
+        description: "Full source registry image name without a tag"
         required: true
-        default: ghcr.io/tale/headplane
+        default: docker.io/library/hello-world
+        type: string
+      image_tag:
+        description: "Exact source image tag; takes precedence over release_tag"
+        required: false
+        default: ""
         type: string
       release_tag:
         description: "Published version, optionally prefixed with v"
-        required: true
-        default: v0.8.1
+        required: false
+        default: linux
         type: string
 
 permissions:
@@ -39,7 +50,7 @@ permissions:
   packages: read
 
 concurrency:
-  group: mirror-${{ github.repository }}-${{ inputs.image_name }}-${{ inputs.release_tag }}
+  group: mirror-${{ github.repository }}-${{ inputs.image_name }}-${{ inputs.image_tag || inputs.release_tag }}
   cancel-in-progress: false
 
 jobs:
@@ -54,16 +65,23 @@ jobs:
         id: references
         env:
           INPUT_IMAGE_NAME: ${{ inputs.image_name }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
           RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
           image_name="${INPUT_IMAGE_NAME,,}"
-          version="${RELEASE_TAG#v}"
-          [[ "$image_name" =~ ^ghcr\.io/[a-z0-9_./-]+$ ]]
+          version="$IMAGE_TAG"
+          if [ -z "$version" ]; then
+            version="$RELEASE_TAG"
+            if [[ "$version" =~ ^v[0-9] ]]; then
+              version="${version#v}"
+            fi
+          fi
+          [[ "$image_name" =~ ^[a-z0-9.-]+(:[0-9]+)?/[a-z0-9_./-]+$ ]]
           [[ "$version" =~ ^[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,127}$ ]]
           {
             echo "source=$image_name:$version"
             echo "source_name=$image_name"
-            echo "destination=registry.trinfo.net/${image_name#ghcr.io/}:$version"
+            echo "destination=registry.trinfo.net/${image_name#*/}:$version"
           } >> "$GITHUB_OUTPUT"
 
       - name: Install verified crane
@@ -79,6 +97,7 @@ jobs:
           echo "$crane_dir" >> "$GITHUB_PATH"
 
       - name: Login to GHCR
+        if: startsWith(inputs.image_name, 'ghcr.io/')
         uses: docker/login-action@v4
         with:
           registry: ghcr.io

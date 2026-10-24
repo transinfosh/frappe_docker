@@ -92,6 +92,12 @@ on:
         default: linux/amd64
         type: string
     secrets:
+      REGISTRY_USERNAME:
+        description: "Private Registry publishing account"
+        required: true
+      REGISTRY_PASSWORD:
+        description: "Private Registry publishing password"
+        required: true
       APP_SOURCE_TOKEN:
         description: "读取私有应用源码的令牌；为空时使用 GITHUB_TOKEN"
         required: false
@@ -352,3 +358,13 @@ jobs:
             current_repo_token=${{ steps.token.outputs.current_file }}
             source_token=${{ steps.token.outputs.source_file }}
           tags: ${{ steps.image.outputs.tags }}
+
+  mirror:
+    needs: build
+    uses: ./.github/workflows/mirror-release-image.yml
+    with:
+      image_name: ${{ inputs.image_name }}
+      release_tag: ${{ inputs.release_tag }}
+    secrets:
+      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}

@@ -100,7 +100,15 @@ jobs:
           DESTINATION: ${{ steps.references.outputs.destination }}
         run: |
           digest="$(crane digest "$SOURCE")"
-          crane copy --jobs=2 "$SOURCE_NAME@$digest" "$DESTINATION"
+          for attempt in 1 2 3; do
+            if crane copy --jobs=2 "$SOURCE_NAME@$digest" "$DESTINATION"; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              exit 1
+            fi
+            sleep 5
+          done
           test "$(crane digest "$DESTINATION")" = "$digest"
           {
             echo "image=$DESTINATION"

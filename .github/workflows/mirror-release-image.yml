@@ -17,6 +17,11 @@ on:
         required: false
         default: ""
         type: string
+      mirror_aliases:
+        description: "Also publish source tags that currently refer to the same digest"
+        required: false
+        default: true
+        type: boolean
     secrets:
       REGISTRY_USERNAME:
         required: true
@@ -44,6 +49,11 @@ on:
         required: false
         default: linux
         type: string
+      mirror_aliases:
+        description: "Also publish tags that currently refer to the same digest"
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -134,3 +144,49 @@ jobs:
             echo "digest=$digest"
           } >> "$GITHUB_OUTPUT"
           printf 'Published %s@%s\n' "$DESTINATION" "$digest" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Synchronize tags for the published digest
+        if: inputs.mirror_aliases
+        shell: python
+        env:
+          SOURCE_NAME: ${{ steps.references.outputs.source_name }}
+          DESTINATION: ${{ steps.references.outputs.destination }}
+          SOURCE_DIGEST: ${{ steps.copy.outputs.digest }}
+        run: |
+          from concurrent.futures import ThreadPoolExecutor
+          import os
+          import re
+          import subprocess
+          import time
+
+          source = os.environ["SOURCE_NAME"]
+          destination = os.environ["DESTINATION"]
+          expected = os.environ["SOURCE_DIGEST"]
+          primary_tag = destination.rsplit(":", 1)[1]
+
+          def digest(reference):
+              for attempt in range(3):
+                  result = subprocess.run(["crane", "digest", reference], capture_output=True,
+                                          text=True, timeout=30)
+                  if result.returncode == 0:
+                      return result.stdout.strip()
+                  time.sleep(attempt + 1)
+              raise RuntimeError("Cannot inspect tag digest: " + reference)
+
+          tags = subprocess.check_output(["crane", "ls", source], text=True).splitlines()
+          candidates = [tag for tag in tags if tag != primary_tag
+                        and re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}", tag)
+                        and (source.startswith("ghcr.io/") or tag in {"latest", "stable"})]
+          with ThreadPoolExecutor(max_workers=4) as pool:
+              matches = list(pool.map(lambda tag: digest(source + ":" + tag) == expected, candidates))
+          mirrored = []
+          for tag, matches_digest in zip(candidates, matches):
+              # Recheck mutable aliases immediately before publication.
+              if not matches_digest or digest(source + ":" + tag) != expected:
+                  continue
+              subprocess.run(["crane", "tag", destination, tag], check=True)
+              if digest(destination.rsplit(":", 1)[0] + ":" + tag) != expected:
+                  raise RuntimeError("Alias digest verification failed: " + tag)
+              mirrored.append(tag)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              summary.write("\nAdditional source tags synchronized: " + ", ".join(mirrored) + "\n")

@@ -23,7 +23,15 @@
 
 在镜像成功发布后调用 `.github/workflows/mirror-release-image.yml`，传入 `image_name`（不带 tag 的完整源仓库地址）和 `image_tag`（精确 tag），以及上述两个 Registry secrets。它不依赖 Frappe、DocType 或具体构建技术，支持 GHCR 与 Docker Hub 等标准镜像源，也可以手动触发来回填已有版本。`release_tag` 保留兼容 Frappe 发布，数值版本的前导 v 会去除；其他流程优先使用不做改写的 `image_tag`。
 
+当前共享流程固定版本为 `8957f9148e1eff3e43dbf3e2ab2330a430086764`。
+
 同步保留 namespace、镜像名与版本号，例如 `ghcr.io/transinfosh/my_app:1.2.3` 对应 `registry.trinfo.net/transinfosh/my_app:1.2.3`。按源 digest 复制所有平台并核对目标 digest；断开的上传可以启动新会话重试，已完成的层会复用。同步失败可以单独重跑，不需要重新构建。
+
+默认同时同步 GHCR 中与本次版本摘要相同的其他标签，包括 latest 和 Git 提交别名；写入前再次核对源标签。其他镜像源只检查 latest、stable 常用别名。可设置 `mirror_aliases: false` 仅同步精确标签。
+
+## 独立服务构建
+
+`transinfosh/tsuite_deploy` 的新版 `.github/workflows/build-images.yml` 已包含后置同步，支持 tai-service、tbi-engine、tai-auth。新的调用方除 APP_SOURCE_TOKEN 外，还须显式传入 REGISTRY_USERNAME、REGISTRY_PASSWORD 两项 Secrets。旧提交固定的构建调用保留原契约，可在调用方追加公共同步 job；独立服务的 v 前缀标签须通过 `image_tag` 原样传递。
 
 ## 新应用接入
 

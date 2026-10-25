@@ -105,4 +105,8 @@ jobs:
           venv/bin/pip install -r requirements-test.txt
 
       - name: Test
+        # Build validation uses public dependencies without customer credentials.
+        env:
+          POSTGRES_IMAGE: postgres:15.17
+          REDIS_IMAGE: redis:8.6-alpine
         run: venv/bin/pytest --color=yes

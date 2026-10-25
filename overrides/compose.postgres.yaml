@@ -8,7 +8,7 @@ services:
         condition: service_healthy
 
   db:
-    image: postgres:15.17
+    image: ${POSTGRES_IMAGE:-registry.trinfo.net/library/postgres:15.17}
     command: []
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]

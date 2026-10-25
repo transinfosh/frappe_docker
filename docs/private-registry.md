@@ -7,10 +7,10 @@
 统一调用 `.github/workflows/app-release-image.yml`。该工作流已经包含构建、验证、GHCR 发布和后置同步，无需在应用仓库单独编写同步 job。使用固定提交 SHA，沿用各应用已有的构建参数，并传入：
 
 ```yaml
-    secrets:
-      APP_SOURCE_TOKEN: ${{ secrets.APP_SOURCE_TOKEN }}
-      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
-      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+secrets:
+  APP_SOURCE_TOKEN: ${{ secrets.APP_SOURCE_TOKEN }}
+  REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+  REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
 ```
 
 也可以对受信任的同组织公共工作流使用 `secrets: inherit`。
@@ -44,3 +44,29 @@ python3 resources/registry/enroll.py transinfosh/my_app
 该脚本位于 frappe_docker；tsuite/Frappe Bench 工作区也保留 `scripts/registry/enroll.py` 入口。脚本读取组织与仓库状态：公开仓库直接继承组织配置；Free 私有仓库自动配置同名仓库 Secrets。需具备相应 GitHub 管理授权，并能通过 SSH 读取 2.52 root 私有的发布凭据。脚本不显示密码或将密码保存在维护机文件中；重复接入已有仓库不会覆盖凭据。轮换凭据时使用 `--refresh` 更新私有仓库副本。
 
 不要把发布凭据交给客户。客户使用只读账号，部署配置必须明确改成自建仓库地址。常用第三方镜像由维护脚本按版本导入，不会因为配置了仓库而自动缓存所有上游。
+
+## 客户部署与 AI 直接维护 Compose
+
+默认使用 `registry.trinfo.net` 与 `registry-pull` 只读账号。构建 job 与后置同步均成功后，
+将部署的 `CUSTOM_IMAGE` 或各服务的 `image` 改为自建地址，保留原版本或 digest：
+
+```dotenv
+CUSTOM_IMAGE=registry.trinfo.net/transinfosh/quality
+CUSTOM_TAG=0.0.31
+POSTGRES_IMAGE=registry.trinfo.net/library/postgres:15.17
+REDIS_IMAGE=registry.trinfo.net/library/redis:8.6-alpine
+```
+
+本 fork 的 PostgreSQL、Redis overrides 默认从自建仓库读取；上述两个依赖变量可以显式覆盖。
+已有环境先确认数据库、Redis 的实际版本，把同版本同步并填写变量，避免套用新安装默认值。
+密码只通过 `docker login --password-stdin` 输入，不保存在 `.env` 或 Compose 中。
+
+部署前使用现场全部 Compose 参数执行 `docker compose config --images`，确认应用、后台任务、
+Redis、数据库及独立服务均来自自建仓库且 manifest 可读取。可使用
+[tsuite_deploy 的镜像检查器](https://github.com/transinfosh/tsuite_deploy/blob/main/tools/check-registry-images.py)。
+缺少原版本时先补齐，不自动回源或改成 latest；将仓库域名加入 Docker daemon 和命令环境的 `NO_PROXY`。
+
+AI 直接维护现场 Compose 也沿用
+[部署镜像来源契约](https://github.com/transinfosh/tsuite_deploy/blob/main/shared/contracts/README.md#镜像来源)，
+先备份再修改来源，保留项目、卷、网络和 Secret。仅更新配置不代表已运行容器已经切换，
+需要在部署记录中分别说明；正常升级按原流程执行备份、迁移和健康检查。
